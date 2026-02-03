@@ -23,6 +23,14 @@ export default async function BootcampDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch existing lessons for this bootcamp
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("day_number")
+    .eq("bootcamp_id", id);
+
+  const existingLessons = lessons?.map((l) => l.day_number) || [];
+
   const completedDays = bootcamp.current_day - 1;
   const totalDays = bootcamp.duration_days;
   const progressPercentage = Math.round((completedDays / totalDays) * 100);
@@ -126,6 +134,8 @@ export default async function BootcampDetailPage({ params }: PageProps) {
               days={bootcamp.syllabus_json.days}
               currentDay={bootcamp.current_day}
               bootcampId={bootcamp.id}
+              bootcampGoal={bootcamp.goal}
+              existingLessons={existingLessons}
             />
           </div>
         </div>

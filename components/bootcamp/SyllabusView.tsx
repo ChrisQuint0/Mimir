@@ -1,25 +1,82 @@
 "use client";
 
-import { Check, Lock, Circle, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Lock, Circle, Sparkles, Loader2, BookOpen } from "lucide-react";
 import { SyllabusDay } from "@/lib/types/bootcamp";
+import { toast } from "sonner";
 
 interface SyllabusViewProps {
   days: SyllabusDay[];
   currentDay: number;
   bootcampId: string;
+  bootcampGoal: string;
+  existingLessons: number[]; // Array of day numbers that have lessons
 }
 
 export function SyllabusView({
   days,
   currentDay,
   bootcampId,
+  bootcampGoal,
+  existingLessons,
 }: SyllabusViewProps) {
+  const router = useRouter();
+  const [generatingDay, setGeneratingDay] = useState<number | null>(null);
+
+  const handleGenerateLesson = async (day: SyllabusDay) => {
+    setGeneratingDay(day.day);
+
+    try {
+      console.log("Generating lesson for day", day.day);
+
+      const response = await fetch("/api/generate-lesson", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bootcampId,
+          dayNumber: day.day,
+          dayTitle: day.title,
+          topics: day.topics,
+          goal: bootcampGoal,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate lesson");
+      }
+
+      toast.success("Lesson Generated! 🎉", {
+        description: `Day ${day.day} is ready for you to learn!`,
+      });
+
+      // Redirect to the lesson page
+      router.push(`/bootcamp/${bootcampId}/lesson/${day.day}`);
+      router.refresh();
+    } catch (error: any) {
+      console.error("Failed to generate lesson:", error);
+      toast.error("Generation Failed", {
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    } finally {
+      setGeneratingDay(null);
+    }
+  };
+
+  const handleViewLesson = (dayNumber: number) => {
+    router.push(`/bootcamp/${bootcampId}/lesson/${dayNumber}`);
+  };
+
   return (
     <div className="space-y-4">
       {days.map((day, index) => {
         const isPast = day.day < currentDay;
         const isCurrent = day.day === currentDay;
         const isFuture = day.day > currentDay;
+        const hasLesson = existingLessons.includes(day.day);
+        const isGenerating = generatingDay === day.day;
 
         return (
           <div
@@ -139,13 +196,39 @@ export function SyllabusView({
                   ))}
                 </div>
 
-                {/* Action button for current day */}
-                {isCurrent && (
-                  <div className="mt-4">
-                    <button className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40">
-                      <Sparkles className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
-                      <span>Generate Lesson</span>
-                    </button>
+                {/* Action buttons for current and past days */}
+                {(isCurrent || (isPast && hasLesson)) && (
+                  <div className="mt-4 flex gap-2">
+                    {/* Generate or View Lesson button */}
+                    {hasLesson ? (
+                      <button
+                        onClick={() => handleViewLesson(day.day)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-all border border-slate-700"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        <span>View Lesson</span>
+                      </button>
+                    ) : (
+                      isCurrent && (
+                        <button
+                          onClick={() => handleGenerateLesson(day)}
+                          disabled={isGenerating}
+                          className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:shadow-none disabled:cursor-not-allowed"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>Generating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 group-hover/btn:rotate-12 transition-transform" />
+                              <span>Generate Lesson</span>
+                            </>
+                          )}
+                        </button>
+                      )
+                    )}
                   </div>
                 )}
 
