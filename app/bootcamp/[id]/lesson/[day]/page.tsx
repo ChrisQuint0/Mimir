@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/tokyo-night-dark.css";
+import { Sparkles } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string; day: string }>;
@@ -39,6 +40,15 @@ export default async function LessonPage({ params }: PageProps) {
   if (error || !lesson) {
     notFound();
   }
+
+  // Check if activities exist for this lesson
+  const { data: existingActivities } = await supabase
+    .from("activities")
+    .select("id")
+    .eq("lesson_id", lesson.id)
+    .limit(1);
+
+  const hasActivities = existingActivities && existingActivities.length > 0;
 
   // Estimate reading time (assuming 200 words per minute)
   const wordCount = lesson.content.split(/\s+/).length;
@@ -203,13 +213,24 @@ export default async function LessonPage({ params }: PageProps) {
                 <span>Back to Syllabus</span>
               </Link>
 
-              <Link
-                href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
-                className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
-              >
-                <span>Proceed to Activities</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {hasActivities ? (
+                <Link
+                  href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                >
+                  <span>View Activities</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <Link
+                  href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Generate Activities</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              )}
             </div>
           </div>
         </div>
