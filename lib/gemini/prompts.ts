@@ -59,3 +59,50 @@ The lesson should take approximately 20-30 minutes to read and understand.
 
 Generate the lesson content now (Markdown format only, no JSON):`;
 }
+
+export function generateActivitiesPrompt(lessonContent: string): string {
+  return `You are Mimir, an expert educator creating practice activities. Based on the following lesson content, generate 4 practice activities that reinforce key concepts.
+
+LESSON CONTENT:
+${lessonContent}
+
+Generate activities as a JSON array in this EXACT format (no markdown, no backticks, no additional text):
+
+[
+  {
+    "question": "Clear, specific question or task",
+    "answer": "Detailed answer or solution with explanation"
+  },
+  {
+    "question": "Clear, specific question or task",
+    "answer": "Detailed answer or solution with explanation"
+  },
+  {
+    "question": "Clear, specific question or task",
+    "answer": "Detailed answer or solution with explanation"
+  },
+  {
+    "question": "Clear, specific question or task",
+    "answer": "Detailed answer or solution with explanation"
+  }
+]
+
+REQUIREMENTS:
+1. Create EXACTLY 4 activities
+2. Mix question types:
+   - Activity 1: Conceptual understanding (explain a concept in your own words)
+   - Activity 2: Practical application (apply the concept to a real scenario)
+   - Activity 3: Code or problem-solving (if applicable to the lesson)
+   - Activity 4: Critical thinking (compare, analyze, or synthesize concepts)
+3. Make questions specific and actionable
+4. Provide comprehensive answers with:
+   - Clear explanations
+   - Step-by-step reasoning when appropriate
+   - Code examples if the question involves coding (use proper markdown code blocks)
+   - Why the answer is correct
+5. Progress from easier to more challenging
+6. Ensure questions directly relate to the lesson content
+7. Return ONLY the JSON array, nothing else
+
+Generate the 4 activities now:`;
+}
