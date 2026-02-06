@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, BookOpen, CheckCircle2, Lightbulb, Eye, EyeOff } from "lucide-react";
+import { ChevronRight, BookOpen, CheckCircle2, Lightbulb, Eye, EyeOff, Sparkles } from "lucide-react";
 import { ActivityCard } from "@/components/bootcamp/ActivityCard";
 import { useEffect, useState } from "react";
 
@@ -35,6 +35,8 @@ export default function ActivitiesPage() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [revealAll, setRevealAll] = useState(false);
 
   useEffect(() => {
@@ -77,12 +79,42 @@ export default function ActivitiesPage() {
         .eq("lesson_id", lessonData.id)
         .order("order_index", { ascending: true });
 
-      setActivities(activitiesData || []);
-      setLoading(false);
+      if (!activitiesData || activitiesData.length === 0) {
+        // No activities exist, generate them
+        setLoading(false);
+        setGenerating(true);
+
+        try {
+          const response = await fetch("/api/generate-activities", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ lessonId: lessonData.id }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to generate activities");
+          }
+
+          const result = await response.json();
+          setActivities(result.activities || []);
+          setGenerating(false);
+        } catch (err: any) {
+          console.error("Error generating activities:", err);
+          setError(err.message || "Failed to generate activities");
+          setGenerating(false);
+        }
+      } else {
+        setActivities(activitiesData);
+        setLoading(false);
+      }
     }
 
     fetchData();
   }, [id, dayNumber]);
+
 
   if (loading) {
     return (
@@ -90,6 +122,56 @@ export default function ActivitiesPage() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">Loading activities...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (generating) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl animate-pulse"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-white animate-bounce" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Generating Activities...
+          </h2>
+          <p className="text-slate-400 mb-2">
+            Mimir is crafting personalized practice exercises for you.
+          </p>
+          <p className="text-slate-500 text-sm">
+            This usually takes 10-20 seconds.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Generation Failed
+          </h2>
+          <p className="text-slate-400 mb-6">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -208,8 +290,8 @@ export default function ActivitiesPage() {
               <button
                 onClick={() => setRevealAll(!revealAll)}
                 className={`flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${revealAll
-                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-                    : "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                  : "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
                   }`}
               >
                 {revealAll ? (
