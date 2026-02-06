@@ -1,50 +1,107 @@
-import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronRight, BookOpen, CheckCircle2, Lightbulb } from "lucide-react";
-import { ActivityCard } from "@/components/bootcamp/ActivityCard";
+"use client";
 
-interface PageProps {
-  params: Promise<{ id: string; day: string }>;
+import { createClient } from "@/lib/supabase/client";
+import { notFound, useParams } from "next/navigation";
+import Link from "next/link";
+import { ChevronRight, BookOpen, CheckCircle2, Lightbulb, Eye, EyeOff } from "lucide-react";
+import { ActivityCard } from "@/components/bootcamp/ActivityCard";
+import { useEffect, useState } from "react";
+
+
+interface Activity {
+  id: string;
+  question: string;
+  answer: string;
+  order_index: number;
+  revealed: boolean;
 }
 
-export default async function ActivitiesPage({ params }: PageProps) {
-  const { id, day } = await params;
+interface Bootcamp {
+  title: string;
+}
+
+interface Lesson {
+  id: string;
+  title: string;
+}
+
+export default function ActivitiesPage() {
+  const params = useParams();
+  const id = params?.id as string;
+  const day = params?.day as string;
   const dayNumber = parseInt(day);
-  const supabase = await createClient();
 
-  // Fetch bootcamp info
-  const { data: bootcamp } = await supabase
-    .from("bootcamps")
-    .select("title")
-    .eq("id", id)
-    .single();
+  const [bootcamp, setBootcamp] = useState<Bootcamp | null>(null);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [revealAll, setRevealAll] = useState(false);
 
-  if (!bootcamp) {
-    notFound();
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient();
+
+      // Fetch bootcamp info
+      const { data: bootcampData } = await supabase
+        .from("bootcamps")
+        .select("title")
+        .eq("id", id)
+        .single();
+
+      if (!bootcampData) {
+        notFound();
+        return;
+      }
+
+      setBootcamp(bootcampData);
+
+      // Fetch lesson
+      const { data: lessonData } = await supabase
+        .from("lessons")
+        .select("id, title")
+        .eq("bootcamp_id", id)
+        .eq("day_number", dayNumber)
+        .single();
+
+      if (!lessonData) {
+        notFound();
+        return;
+      }
+
+      setLesson(lessonData);
+
+      // Fetch activities
+      const { data: activitiesData } = await supabase
+        .from("activities")
+        .select("*")
+        .eq("lesson_id", lessonData.id)
+        .order("order_index", { ascending: true });
+
+      setActivities(activitiesData || []);
+      setLoading(false);
+    }
+
+    fetchData();
+  }, [id, dayNumber]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading activities...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Fetch lesson
-  const { data: lesson } = await supabase
-    .from("lessons")
-    .select("id, title")
-    .eq("bootcamp_id", id)
-    .eq("day_number", dayNumber)
-    .single();
-
-  if (!lesson) {
-    notFound();
+  if (!bootcamp || !lesson) {
+    return null;
   }
-
-  // Fetch activities
-  const { data: activities, error } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("lesson_id", lesson.id)
-    .order("order_index", { ascending: true });
 
   // If no activities exist, show generation prompt
   if (!activities || activities.length === 0) {
+
     return (
       <div className="min-h-screen bg-slate-950">
         <div className="container mx-auto px-4 py-8">
@@ -138,13 +195,36 @@ export default async function ActivitiesPage({ params }: PageProps) {
               <BookOpen className="w-4 h-4" />
               <span>Practice Activities</span>
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4">
-              {lesson.title}
-            </h1>
-            <p className="text-slate-400">
-              Complete these {activities.length} activities to reinforce what
-              you've learned.
-            </p>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex-1">
+                <h1 className="text-4xl font-bold text-white mb-4">
+                  {lesson.title}
+                </h1>
+                <p className="text-slate-400">
+                  Complete these {activities.length} activities to reinforce what
+                  you've learned.
+                </p>
+              </div>
+              <button
+                onClick={() => setRevealAll(!revealAll)}
+                className={`flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${revealAll
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                    : "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                  }`}
+              >
+                {revealAll ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    <span>Hide All Answers</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    <span>Reveal All Answers</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Activities */}
@@ -155,6 +235,7 @@ export default async function ActivitiesPage({ params }: PageProps) {
                 activity={activity}
                 number={index + 1}
                 total={activities.length}
+                forceReveal={revealAll}
               />
             ))}
           </div>
