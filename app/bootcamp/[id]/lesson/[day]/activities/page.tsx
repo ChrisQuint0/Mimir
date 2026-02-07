@@ -1,11 +1,12 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, BookOpen, CheckCircle2, Lightbulb, Eye, EyeOff, Sparkles } from "lucide-react";
 import { ActivityCard } from "@/components/bootcamp/ActivityCard";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 
 interface Activity {
@@ -27,6 +28,7 @@ interface Lesson {
 
 export default function ActivitiesPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const day = params?.day as string;
   const dayNumber = parseInt(day);
@@ -38,6 +40,7 @@ export default function ActivitiesPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [revealAll, setRevealAll] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -115,6 +118,41 @@ export default function ActivitiesPage() {
     fetchData();
   }, [id, dayNumber]);
 
+  const handleCompleteDay = async () => {
+    setCompleting(true);
+    try {
+      const response = await fetch(`/api/bootcamp/${id}/complete-day`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ dayNumber }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to complete day");
+      }
+
+      const result = await response.json();
+
+      // Show success toast
+      toast.success(`Day ${dayNumber} completed! 🎉`, {
+        description: "Great work! Moving to the next day.",
+      });
+
+      // Redirect to bootcamp syllabus after a short delay
+      setTimeout(() => {
+        router.push(`/bootcamp/${id}`);
+      }, 1000);
+    } catch (err: any) {
+      console.error("Error completing day:", err);
+      toast.error("Failed to complete day", {
+        description: err.message || "Please try again.",
+      });
+      setCompleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -338,13 +376,23 @@ export default function ActivitiesPage() {
                     you're ready, mark this day as complete to unlock the next
                     lesson.
                   </p>
-                  <Link
-                    href={`/bootcamp/${id}`}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
+                  <button
+                    onClick={handleCompleteDay}
+                    disabled={completing}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-green-600/50 disabled:to-emerald-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Mark Day {dayNumber} Complete</span>
-                  </Link>
+                    {completing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Completing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Mark Day {dayNumber} Complete</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
