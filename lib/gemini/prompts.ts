@@ -1,3 +1,32 @@
+export function generateSyllabusPrompt(goal: string, duration: number): string {
+  return `You are Mimir, an expert curriculum designer. create a structured ${duration}-day learning syllabus for the following goal:
+
+GOAL: "${goal}"
+
+Format the response as a JSON object with a "days" array. Each day should have:
+- day: number (1 to ${duration})
+- title: string (short, catchy title)
+- description: string (brief overview of what will be learned)
+- topics: string[] (3-5 specific key topics/concepts)
+
+The syllabus should be progressive, starting with foundations and building up to complex topics.
+Ensure the content is achievable in about 1-2 hours per existing day.
+
+EXAMPLE JSON FORMAT:
+{
+  "days": [
+    {
+      "day": 1,
+      "title": "Introduction to Concepts",
+      "description": "Overview of the basics and setting up the environment.",
+      "topics": ["Topic 1", "Topic 2", "Topic 3"]
+    }
+  ]
+}
+
+RETURN ONLY THE JSON OBJECT. NO MARKDOWN, NO EXPLANATIONS.`;
+}
+
 export function generateLessonPrompt(
   goal: string,
   dayNumber: number,

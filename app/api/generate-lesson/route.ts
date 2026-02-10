@@ -39,6 +39,16 @@ export async function POST(req: Request) {
       );
     }
 
+    // Enforce sequential unlocking
+    // Users can regenerate past lessons (if needed) or generate the current day
+    // But cannot generate future days
+    if (dayNumber > bootcamp.current_day) {
+      return NextResponse.json(
+        { error: `You must complete Day ${bootcamp.current_day} first` },
+        { status: 403 },
+      );
+    }
+
     // Check if lesson already exists
     const { data: existingLesson } = await supabase
       .from("lessons")
