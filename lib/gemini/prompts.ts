@@ -131,7 +131,7 @@ REQUIREMENTS:
 4. Provide comprehensive answers with:
    - Clear explanations
    - Step-by-step reasoning when appropriate
-   - Code examples if the question involves coding (use proper markdown code blocks)
+   - Code examples MUST use proper markdown code blocks (e.g., use triple backticks with language)
    - Why the answer is correct
 5. Progress from easier to more challenging
 6. Ensure questions directly relate to the lesson content

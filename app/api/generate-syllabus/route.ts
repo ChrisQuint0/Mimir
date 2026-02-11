@@ -46,8 +46,9 @@ export async function POST(req: Request) {
 
         // Clean up the response (remove markdown code blocks if present)
         const cleanedResponse = rawResponse
-          .replace(/```json\n?/g, "")
-          .replace(/```\n?/g, "")
+          .replace(/^```json\s*/, "")
+          .replace(/^```\s*/, "")
+          .replace(/\s*```$/, "")
           .trim();
 
         // Parse and validate JSON with Zod
