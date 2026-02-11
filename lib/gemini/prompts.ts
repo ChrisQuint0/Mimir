@@ -118,11 +118,15 @@ Generate activities as a JSON array in this EXACT format (no markdown, no backti
 
 REQUIREMENTS:
 1. Create EXACTLY 4 activities
-2. Mix question types:
-   - Activity 1: Conceptual understanding (explain a concept in your own words)
-   - Activity 2: Practical application (apply the concept to a real scenario)
-   - Activity 3: Code or problem-solving (if applicable to the lesson)
-   - Activity 4: Critical thinking (compare, analyze, or synthesize concepts)
+2. Mix question types based on the subject nature:
+   - IF the subject is PRACTICAL (e.g., programming, design, engineering):
+     - Activities 1, 2, and 3 MUST be practical/hands-on exercises (e.g., "Write a function to...", "Design a component that...", "Debug this code...").
+     - Activity 4 should be a critical thinking or conceptual question (e.g., "Explain why...", "Compare X and Y...").
+   - IF the subject is THEORETICAL/CONCEPTUAL:
+     - Activity 1: Conceptual understanding
+     - Activity 2: Practical application scenario
+     - Activity 3: Analysis/Problem-solving
+     - Activity 4: Critical thinking/Synthesis
 3. Make questions specific and actionable
 4. Provide comprehensive answers with:
    - Clear explanations
