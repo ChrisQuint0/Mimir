@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // Verify user owns this bootcamp
     const { data: bootcamp, error: bootcampError } = await supabase
       .from("bootcamps")
-      .select("id, user_id")
+      .select("id, user_id, current_day")
       .eq("id", bootcampId)
       .single();
 
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "Invalid request data",
-          details: error.errors,
+          details: error.issues,
         },
         { status: 400 },
       );

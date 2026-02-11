@@ -82,7 +82,7 @@ export async function POST(
             return NextResponse.json(
                 {
                     error: "Invalid request data",
-                    details: error.errors,
+                    details: error.issues,
                 },
                 { status: 400 }
             );
