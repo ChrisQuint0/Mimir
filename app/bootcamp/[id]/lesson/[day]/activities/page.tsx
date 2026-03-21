@@ -118,6 +118,13 @@ export default function ActivitiesPage() {
     fetchData();
   }, [id, dayNumber]);
 
+  // Scroll to top when activities are loaded or generated
+  useEffect(() => {
+    if (!loading && !generating && activities.length > 0) {
+      window.scrollTo(0, 0);
+    }
+  }, [loading, generating, activities.length]);
+
   const handleCompleteDay = async () => {
     setCompleting(true);
     try {
@@ -137,8 +144,9 @@ export default function ActivitiesPage() {
       const result = await response.json();
 
       // Show success toast
-      toast.success(`Day ${dayNumber} completed! 🎉`, {
+      toast.success(`Day ${dayNumber} completed!`, {
         description: "Great work! Moving to the next day.",
+        icon: <CheckCircle2 className="w-5 h-5 text-green-400" />,
       });
 
       // Redirect to bootcamp syllabus after a short delay
@@ -317,7 +325,7 @@ export default function ActivitiesPage() {
             </div>
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-white mb-4">
+                <h1 className="text-4xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-lora)' }}>
                   {lesson.title}
                 </h1>
                 <p className="text-slate-400">

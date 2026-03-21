@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { signOut, getCurrentUser } from "@/lib/supabase/auth";
-import { BookOpen, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logoWhite from "../../public/mimir_logo_white.png";
 
 export function Header() {
   const router = useRouter();
@@ -43,10 +45,8 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
-            <BookOpen className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
+          <Image src={logoWhite} alt="Mimir" height={32} className="w-auto" priority />
+          <span className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-lora)' }}>
             Mimir
           </span>
         </Link>

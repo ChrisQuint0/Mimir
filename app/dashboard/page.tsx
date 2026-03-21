@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, Sparkles, Plus, Zap, Star } from "lucide-react";
+import { BookOpen, Sparkles, Plus, Zap } from "lucide-react";
 import { CreateBootcampDialog } from "@/components/bootcamp/CreateBootcampDialog";
 import { BootcampCard } from "@/components/bootcamp/BootcampCard";
 import { DeleteBootcampDialog } from "@/components/bootcamp/DeleteBootcampDialog";
@@ -17,32 +17,36 @@ export default function DashboardPage() {
   const [bootcampToDelete, setBootcampToDelete] = useState<Bootcamp | null>(
     null,
   );
-  const [particleStyles, setParticleStyles] = useState<React.CSSProperties[]>([]);
 
   const supabase = createClient();
 
   // Fetch bootcamps on mount
   useEffect(() => {
     fetchBootcamps();
-    setParticleStyles(
-      [...Array(12)].map(() => ({
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        animation: `twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
-        animationDelay: `${Math.random() * 2}s`,
-      }))
-    );
   }, []);
 
   async function fetchBootcamps() {
     try {
       const { data, error } = await supabase
         .from("bootcamps")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
 
       if (error) throw error;
-      setBootcamps(data || []);
+
+      // Custom sort: highest progress first, then newest first
+      const sortedData = (data || []).sort((a, b) => {
+        const progressA = (a.current_day - 1) / a.duration_days;
+        const progressB = (b.current_day - 1) / b.duration_days;
+        
+        if (progressB !== progressA) {
+          return progressB - progressA;
+        }
+        
+        // If progress is the same, newest first
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setBootcamps(sortedData);
     } catch (error) {
       console.error("Failed to fetch bootcamps:", error);
       toast.error("Failed to load bootcamps");
@@ -120,17 +124,6 @@ export default function DashboardPage() {
               ></div>
             </div>
 
-            {/* Floating particles */}
-            {particleStyles.map((style, i) => (
-              <div
-                key={i}
-                className="absolute pointer-events-none"
-                style={style}
-              >
-                <Star className="w-2 h-2 text-amber-400/30 fill-amber-400/10" />
-              </div>
-            ))}
-
             {/* Main content */}
             <div className="text-center max-w-2xl relative z-10">
               {/* Icon with glow */}
@@ -155,13 +148,13 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 -z-10 bg-blue-500/20 blur-3xl rounded-full animate-pulse"></div>
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white" style={{ fontFamily: 'var(--font-lora)' }}>
                 Your Journey Begins Here
               </h1>
 
               <p className="text-slate-400 text-lg mb-3 leading-relaxed max-w-xl mx-auto">
                 Welcome to{" "}
-                <span className="text-blue-400 font-semibold">Mimir</span>, your
+                <span className="text-white font-semibold" style={{ fontFamily: 'var(--font-lora)' }}>Mimir</span>, your
                 personalized learning sanctuary.
               </p>
 
@@ -174,12 +167,10 @@ export default function DashboardPage() {
               {/* CTA Button */}
               <button
                 onClick={() => setCreateOpen(true)}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 overflow-hidden"
+                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#6749fb] hover:bg-[#6749fb]/90 text-white font-semibold rounded-xl transition-all shadow-xl shadow-[#6749fb]/25 hover:shadow-[#6749fb]/40"
               >
                 <Plus className="w-5 h-5" />
                 <span>Create Your First Bootcamp</span>
-                <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000 rounded-xl"></div>
               </button>
 
               {/* Feature hints */}
@@ -198,11 +189,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <p className="mt-8 text-slate-600 italic text-sm">
-                "Wisdom is not a product of schooling but of the lifelong
-                attempt to acquire it."
-                <span className="text-slate-500"> — Albert Einstein</span>
-              </p>
             </div>
           </div>
         </div>
@@ -228,11 +214,10 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => setCreateOpen(true)}
-              className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/25 overflow-hidden"
+              className="group relative inline-flex items-center gap-2 px-5 py-2.5 bg-[#6749fb] hover:bg-[#6749fb]/90 text-white font-medium rounded-lg transition-all shadow-lg shadow-[#6749fb]/25"
             >
               <Plus className="w-4 h-4" />
               <span>New Bootcamp</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
             </button>
           </div>
 

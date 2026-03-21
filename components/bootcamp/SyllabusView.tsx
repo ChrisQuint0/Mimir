@@ -48,8 +48,9 @@ export function SyllabusView({
         throw new Error(data.error || "Failed to generate lesson");
       }
 
-      toast.success("Lesson Generated! 🎉", {
+      toast.success("Lesson Generated!", {
         description: `Day ${day.day} is ready for you to learn!`,
+        icon: <Sparkles className="w-5 h-5 text-amber-400" />,
       });
 
       // Redirect to the lesson page
@@ -82,14 +83,14 @@ export function SyllabusView({
           <div
             key={day.day}
             className={`relative group ${isFuture ? "opacity-60 cursor-not-allowed" : ""}`}
-            title={isFuture ? `Complete Day ${currentDay} to unlock this lesson` : ""}
+            title={isFuture ? `Complete Day ${day.day - 1} to unlock this lesson` : ""}
           >
             {/* Timeline line (except for last item) */}
             {index < days.length - 1 && (
               <div
-                className={`absolute left-6 top-14 bottom-0 w-0.5 ${isPast
-                    ? "bg-gradient-to-b from-blue-500 to-purple-500"
-                    : "bg-slate-800"
+                className={`absolute left-6 top-[64px] bottom-0 w-0.5 ${isPast
+                  ? "bg-[#6749fb]"
+                  : "bg-slate-800"
                   }`}
               ></div>
             )}
@@ -97,40 +98,24 @@ export function SyllabusView({
             {/* Day card */}
             <div
               className={`relative flex gap-4 p-5 rounded-xl border transition-all ${isCurrent
-                  ? "bg-blue-500/5 border-blue-500/30 shadow-lg shadow-blue-500/10"
-                  : isPast
-                    ? "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-                    : "bg-slate-900/30 border-slate-800/50"
+                ? "bg-blue-500/5 border-blue-500/30 shadow-lg shadow-blue-500/10"
+                : isPast
+                  ? "bg-slate-900/50 border-slate-800 hover:border-slate-700"
+                  : "bg-slate-900/30 border-slate-800/50"
                 }`}
             >
               {/* Day number badge */}
               <div className="flex-shrink-0">
                 <div
-                  className={`relative w-12 h-12 rounded-xl flex items-center justify-center font-semibold ${isCurrent
-                      ? "bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30"
-                      : isPast
-                        ? "bg-gradient-to-br from-green-600/20 to-emerald-600/20 border border-green-500/30 text-green-400"
-                        : "bg-slate-800 border border-slate-700 text-slate-500"
+                  className={`relative w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${isCurrent
+                    ? "bg-[#6749fb] text-white shadow-lg shadow-[#6749fb]/30"
+                    : isPast
+                      ? "bg-emerald-600/20 border border-emerald-500/30 text-emerald-400"
+                      : "bg-slate-800 border border-slate-700 text-slate-500"
                     }`}
                 >
-                  {isPast ? (
-                    <Check className="w-6 h-6" />
-                  ) : isFuture ? (
-                    <Lock className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5 fill-current" />
-                  )}
-
-                  {/* Glow effect for current day */}
-                  {isCurrent && (
-                    <div className="absolute inset-0 bg-blue-500/20 rounded-xl blur-xl -z-10 animate-pulse"></div>
-                  )}
+                  {day.day}
                 </div>
-
-                {/* Day number label */}
-                <p className="text-xs text-slate-500 text-center mt-1">
-                  Day {day.day}
-                </p>
               </div>
 
               {/* Content */}
@@ -138,11 +123,12 @@ export function SyllabusView({
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <h3
                     className={`font-semibold ${isCurrent
-                        ? "text-white"
-                        : isPast
-                          ? "text-slate-300"
-                          : "text-slate-400"
+                      ? "text-white"
+                      : isPast
+                        ? "text-slate-300"
+                        : "text-slate-400"
                       }`}
+                    style={{ fontFamily: 'var(--font-lora)' }}
                   >
                     {day.title}
                     {isCurrent && (
@@ -180,10 +166,10 @@ export function SyllabusView({
                     <span
                       key={idx}
                       className={`text-xs px-2.5 py-1 rounded-full ${isCurrent
-                          ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                          : isPast
-                            ? "bg-slate-800/80 text-slate-400 border border-slate-700/50"
-                            : "bg-slate-800/50 text-slate-500 border border-slate-700/30"
+                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                        : isPast
+                          ? "bg-slate-800/80 text-slate-400 border border-slate-700/50"
+                          : "bg-slate-800/50 text-slate-500 border border-slate-700/30"
                         }`}
                     >
                       {topic}
@@ -208,7 +194,7 @@ export function SyllabusView({
                         <button
                           onClick={() => handleGenerateLesson(day)}
                           disabled={isGenerating}
-                          className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:shadow-none disabled:cursor-not-allowed"
+                          className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-[#6749fb] hover:bg-[#6749fb]/90 disabled:bg-slate-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-[#6749fb]/25 disabled:shadow-none disabled:cursor-not-allowed"
                         >
                           {isGenerating ? (
                             <>
@@ -230,7 +216,7 @@ export function SyllabusView({
                 {/* Tooltip for locked days */}
                 {isFuture && (
                   <p className="text-xs text-slate-600 mt-3 italic">
-                    Complete Day {currentDay} to unlock this lesson
+                    Complete Day {day.day - 1} to unlock this lesson
                   </p>
                 )}
               </div>

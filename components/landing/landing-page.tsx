@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { User } from "@supabase/supabase-js";
 import { Sparkles, Zap, Brain, Rocket, ChartLine, Target, Lightbulb, ArrowRight, ArrowLeft } from "lucide-react";
-import logo from "@/app/assets/mimir_logo_white.png";
+import logo from "@/public/mimir_logo_white.png";
 
 interface LandingPageProps {
     user: User | null;

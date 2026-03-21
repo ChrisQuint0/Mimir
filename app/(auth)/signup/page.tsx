@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/supabase/auth";
 import { Eye, EyeOff, Zap } from "lucide-react";
-import mimirLogo from "@/app/assets/mimir_logo_white.png";
+import mimirLogo from "@/public/mimir_logo_white.png";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");

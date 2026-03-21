@@ -92,7 +92,7 @@ export default async function LessonPage({ params }: PageProps) {
                 <span>{readingTime} min read</span>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight" style={{ fontFamily: 'var(--font-lora)' }}>
               {lesson.title}
             </h1>
           </div>
@@ -104,17 +104,17 @@ export default async function LessonPage({ params }: PageProps) {
               rehypePlugins={[rehypeHighlight, rehypeRaw]}
               components={{
                 h1: ({ children }) => (
-                  <h1 className="text-3xl font-bold text-white mt-8 mb-4 border-b border-slate-800 pb-3">
+                  <h1 className="text-3xl font-bold text-white mt-8 mb-4 border-b border-slate-800 pb-3" style={{ fontFamily: 'var(--font-lora)' }}>
                     {children}
                   </h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 className="text-2xl font-bold text-white mt-8 mb-4">
+                  <h2 className="text-2xl font-bold text-white mt-8 mb-4" style={{ fontFamily: 'var(--font-lora)' }}>
                     {children}
                   </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="text-xl font-semibold text-slate-200 mt-6 mb-3">
+                  <h3 className="text-xl font-semibold text-slate-200 mt-6 mb-3" style={{ fontFamily: 'var(--font-lora)' }}>
                     {children}
                   </h3>
                 ),
@@ -216,7 +216,7 @@ export default async function LessonPage({ params }: PageProps) {
               {hasActivities ? (
                 <Link
                   href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
-                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-[#6749fb] hover:bg-[#6749fb]/90 text-white font-medium rounded-lg transition-all shadow-lg shadow-[#6749fb]/25"
                 >
                   <span>View Activities</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -224,7 +224,7 @@ export default async function LessonPage({ params }: PageProps) {
               ) : (
                 <Link
                   href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
-                  className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                  className="group inline-flex items-center gap-2 px-6 py-3 bg-[#f44c00] hover:bg-[#e64600] text-white font-medium rounded-lg transition-all shadow-lg shadow-[#f44c00]/25 hover:shadow-[#f44c00]/40"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Generate Activities</span>

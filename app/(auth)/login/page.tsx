@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/supabase/auth";
 import { Eye, EyeOff, Zap } from "lucide-react";
-import mimirLogo from "@/app/assets/mimir_logo_white.png";
+import mimirLogo from "@/public/mimir_logo_white.png";
 
 export default function LoginPage() {
   const router = useRouter();

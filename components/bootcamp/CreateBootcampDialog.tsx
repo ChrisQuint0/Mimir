@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Sparkles, Zap } from "lucide-react";
+import { Loader2, Sparkles, Zap, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 
@@ -100,8 +100,9 @@ export function CreateBootcampDialog({
       console.log("Bootcamp created:", bootcamp);
 
       // Step 4: Show success message
-      toast.success("Bootcamp Created! 🎉", {
+      toast.success("Bootcamp Created!", {
         description: `Your ${duration[0]}-day learning journey has begun!`,
+        icon: <Rocket className="w-5 h-5 text-blue-400" />,
       });
 
       // Step 5: Close dialog and redirect
@@ -129,7 +130,7 @@ export function CreateBootcampDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] bg-slate-900 border-slate-800">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold text-[#57a1ff]">
             Create Your Bootcamp
           </DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -219,7 +220,7 @@ export function CreateBootcampDialog({
           <button
             type="submit"
             disabled={loading || !title.trim() || !goal.trim()}
-            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:shadow-none flex items-center justify-center gap-2 group"
+            className="w-full py-3 px-4 bg-[#6749fb] hover:bg-[#6749fb]/90 disabled:bg-slate-700 text-white font-semibold rounded-lg transition-all shadow-lg shadow-[#6749fb]/25 disabled:shadow-none flex items-center justify-center gap-2 group"
           >
             {loading ? (
               <>

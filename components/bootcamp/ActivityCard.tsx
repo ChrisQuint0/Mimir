@@ -23,9 +23,15 @@ interface ActivityCardProps {
 
 export function ActivityCard({ activity, number, total, forceReveal = false }: ActivityCardProps) {
   const [isRevealed, setIsRevealed] = useState(false);
+  const [prevForceReveal, setPrevForceReveal] = useState(forceReveal);
 
   // Sync with forceReveal prop
-  const shouldReveal = forceReveal || isRevealed;
+  if (forceReveal !== prevForceReveal) {
+    setIsRevealed(forceReveal);
+    setPrevForceReveal(forceReveal);
+  }
+
+  const shouldReveal = isRevealed;
 
   return (
     <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
@@ -33,7 +39,7 @@ export function ActivityCard({ activity, number, total, forceReveal = false }: A
       <div className="p-6">
         <div className="flex items-start gap-4">
           {/* Number badge */}
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center" style={{ fontFamily: 'var(--font-lora)' }}>
             <span className="text-blue-400 font-semibold text-sm">
               {number}
             </span>
@@ -129,7 +135,7 @@ export function ActivityCard({ activity, number, total, forceReveal = false }: A
               <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
                 <span className="text-amber-400 text-sm font-semibold">A</span>
               </div>
-              <h4 className="text-amber-400 font-semibold">Answer</h4>
+              <h4 className="text-amber-400 font-semibold" style={{ fontFamily: 'var(--font-lora)' }}>Answer</h4>
             </div>
 
             <div className="pl-11">

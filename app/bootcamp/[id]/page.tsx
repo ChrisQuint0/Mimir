@@ -58,7 +58,7 @@ export default async function BootcampDetailPage({ params }: PageProps) {
                 <BookOpen className="w-8 h-8 text-blue-400" />
               </div>
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-white mb-3">
+                <h1 className="text-4xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-lora)' }}>
                   {bootcamp.title}
                 </h1>
                 <p className="text-slate-400 text-lg leading-relaxed">
@@ -83,7 +83,7 @@ export default async function BootcampDetailPage({ params }: PageProps) {
                 </div>
                 <div className="mt-3 w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                    className="h-full bg-[#6749fb] rounded-full transition-all duration-500"
                     style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
