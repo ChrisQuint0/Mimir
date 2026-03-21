@@ -17,12 +17,21 @@ export default function DashboardPage() {
   const [bootcampToDelete, setBootcampToDelete] = useState<Bootcamp | null>(
     null,
   );
+  const [particleStyles, setParticleStyles] = useState<React.CSSProperties[]>([]);
 
   const supabase = createClient();
 
   // Fetch bootcamps on mount
   useEffect(() => {
     fetchBootcamps();
+    setParticleStyles(
+      [...Array(12)].map(() => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animation: `twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
+        animationDelay: `${Math.random() * 2}s`,
+      }))
+    );
   }, []);
 
   async function fetchBootcamps() {
@@ -112,16 +121,11 @@ export default function DashboardPage() {
             </div>
 
             {/* Floating particles */}
-            {[...Array(12)].map((_, i) => (
+            {particleStyles.map((style, i) => (
               <div
                 key={i}
                 className="absolute pointer-events-none"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animation: `twinkle ${2 + Math.random() * 2}s ease-in-out infinite`,
-                  animationDelay: `${Math.random() * 2}s`,
-                }}
+                style={style}
               >
                 <Star className="w-2 h-2 text-amber-400/30 fill-amber-400/10" />
               </div>
@@ -201,20 +205,6 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-
-          <style jsx>{`
-            @keyframes twinkle {
-              0%,
-              100% {
-                opacity: 0.2;
-                transform: scale(1);
-              }
-              50% {
-                opacity: 1;
-                transform: scale(1.3);
-              }
-            }
-          `}</style>
         </div>
 
         <CreateBootcampDialog open={createOpen} onOpenChange={setCreateOpen} />

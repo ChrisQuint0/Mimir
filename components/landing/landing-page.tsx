@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
@@ -10,6 +11,19 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ user }: LandingPageProps) {
+    const [particleStyles, setParticleStyles] = useState<React.CSSProperties[]>([]);
+
+    useEffect(() => {
+        setParticleStyles(
+            [...Array(20)].map(() => ({
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `float ${15 + Math.random() * 10}s linear infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+            }))
+        );
+    }, []);
+
     return (
         <div className="min-h-screen bg-slate-950 relative overflow-hidden flex flex-col selection:bg-blue-500/30 selection:text-white">
             {/* Animated background orbs (from login page) */}
@@ -26,16 +40,11 @@ export function LandingPage({ user }: LandingPageProps) {
             </div>
 
             {/* Floating particles (from login page) */}
-            {[...Array(20)].map((_, i) => (
+            {particleStyles.map((style, i) => (
                 <div
                     key={i}
                     className="absolute w-1 h-1 bg-blue-400/30 rounded-full pointer-events-none"
-                    style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                        animation: `float ${15 + Math.random() * 10}s linear infinite`,
-                        animationDelay: `${Math.random() * 5}s`,
-                    }}
+                    style={style}
                 />
             ))}
 
@@ -155,24 +164,6 @@ export function LandingPage({ user }: LandingPageProps) {
                 </div>
             </footer>
 
-            <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) translateX(0px);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          50% {
-            transform: translateY(-100px) translateX(50px);
-          }
-        }
-      `}</style>
         </div>
     );
 }

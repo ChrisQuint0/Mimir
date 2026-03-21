@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/supabase/auth";
@@ -13,6 +13,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [particleStyles, setParticleStyles] = useState<React.CSSProperties[]>([]);
+
+  useEffect(() => {
+    setParticleStyles(
+      [...Array(20)].map(() => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animation: `float ${15 + Math.random() * 10}s linear infinite`,
+        animationDelay: `${Math.random() * 5}s`,
+      }))
+    );
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,16 +58,11 @@ export default function LoginPage() {
       </div>
 
       {/* Floating particles */}
-      {[...Array(20)].map((_, i) => (
+      {particleStyles.map((style, i) => (
         <div
           key={i}
           className="absolute w-1 h-1 bg-blue-400/30 rounded-full pointer-events-none"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${15 + Math.random() * 10}s linear infinite`,
-            animationDelay: `${Math.random() * 5}s`,
-          }}
+          style={style}
         />
       ))}
 
@@ -186,25 +193,6 @@ export default function LoginPage() {
           acquire it"
         </p>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) translateX(0px);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          50% {
-            transform: translateY(-100px) translateX(50px);
-          }
-        }
-      `}</style>
     </div>
   );
 }
