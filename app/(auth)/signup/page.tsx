@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/supabase/auth";
-import { Eye, EyeOff, Sparkles, Compass } from "lucide-react";
+import { Eye, EyeOff, Zap } from "lucide-react";
+import mimirLogo from "@/app/assets/mimir_logo_white.png";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -11,28 +12,24 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
-  const [particleStyles, setParticleStyles] = useState<React.CSSProperties[]>([]);
-
-  useEffect(() => {
-    setParticleStyles(
-      [...Array(20)].map(() => ({
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        animation: `float ${15 + Math.random() * 10}s linear infinite`,
-        animationDelay: `${Math.random() * 5}s`,
-      }))
-    );
-  }, []);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+    setSuccess("");
 
     try {
       await signUp(email, password);
       setSuccess("Check your email to confirm your account!");
     } catch (err: any) {
-      setSuccess(err.message || "An error occurred");
+      setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -40,47 +37,26 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden flex items-center justify-center p-4">
-      {/* Animated background orbs - matching login page */}
+      {/* Static background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-3xl"></div>
       </div>
-
-      {/* Floating particles - matching login page */}
-      {particleStyles.map((style, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-blue-400/30 rounded-full pointer-events-none"
-          style={style}
-        />
-      ))}
 
       {/* Main content */}
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 mb-4 shadow-lg shadow-purple-500/50">
-            <Compass
-              className="w-8 h-8 text-white"
-              style={{ animation: "spin 20s linear infinite" }}
-            />
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-amber-400 bg-clip-text text-transparent mb-2">
+          <img src={mimirLogo.src} alt="Mimir Logo" className="w-16 h-auto mx-auto mb-4" />
+          <h1 className="text-4xl font-bold text-white mb-2 font-lora">
             Mimir
           </h1>
-          <p className="text-slate-400 text-sm">Begin Your Journey to Wisdom</p>
         </div>
 
         <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-8 shadow-2xl">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-white mb-2">
-              Create Your Path
+              Create Your Account
             </h2>
             <p className="text-slate-400 text-sm">
               Join the sanctuary of lifelong learners
@@ -103,7 +79,7 @@ export default function SignupPage() {
                 placeholder="your@email.com"
                 required
                 disabled={loading || !!success}
-                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all disabled:opacity-50"
+                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all disabled:opacity-50 [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s,color_9999s_ease-in-out_0s]"
               />
             </div>
 
@@ -124,7 +100,7 @@ export default function SignupPage() {
                   required
                   minLength={6}
                   disabled={loading || !!success}
-                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all pr-12 disabled:opacity-50"
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all pr-12 disabled:opacity-50 [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s,color_9999s_ease-in-out_0s]"
                 />
                 <button
                   type="button"
@@ -139,11 +115,14 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-slate-500 flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3" />
-                Secure your path to knowledge
-              </p>
             </div>
+
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
+                <Zap className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
             {success && (
               <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
@@ -155,22 +134,20 @@ export default function SignupPage() {
             <button
               onClick={handleSubmit}
               disabled={loading || !!success}
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+              className="w-full py-3 px-4 bg-[#6749fb] hover:bg-[#5b3ce4] text-white font-medium rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#6749fb]/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
             >
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Forging your path...</span>
+                  <span>Signing up...</span>
                 </>
               ) : success ? (
                 <>
                   <span>Account Created!</span>
-                  <Sparkles className="w-4 h-4" />
                 </>
               ) : (
                 <>
-                  <span>Begin Your Journey</span>
-                  <Compass className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
+                  <span>Sign Up</span>
                 </>
               )}
             </button>
@@ -178,20 +155,16 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-400">
-              Already a seeker?{" "}
+              {"Have an account? "}
               <Link
                 href="/login"
-                className="text-purple-400 hover:text-purple-300 font-medium transition-colors hover:underline"
+                className="text-blue-400 hover:text-blue-300 font-medium transition-colors hover:underline"
               >
-                Return to the sanctuary
+                Sign in
               </Link>
             </p>
           </div>
         </div>
-
-        <p className="text-center text-slate-500 text-xs mt-6 italic">
-          "The journey of a thousand miles begins with a single step"
-        </p>
       </div>
     </div>
   );
