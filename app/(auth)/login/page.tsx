@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { signIn } from "@/lib/supabase/auth";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import mimirLogo from "@/public/mimir_logo_white.png";
@@ -22,10 +23,10 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push("/dashboard");
+      router.push("/");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -37,14 +38,19 @@ export default function LoginPage() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-amber-500/10 rounded-full blur-3xl"></div>
       </div>
 
       {/* Main content */}
       <div className="relative z-10 w-full max-w-md">
         {/* Logo and title */}
         <div className="text-center mb-8">
-          <img src={mimirLogo.src} alt="Mimir Logo" className="w-16 h-auto mx-auto mb-4" />
+          <Image
+            src={mimirLogo}
+            alt="Mimir Logo"
+            className="w-16 h-auto mx-auto mb-4"
+            priority
+          />
           <h1 className="text-4xl font-bold text-white mb-2 font-lora">
             Mimir
           </h1>
@@ -119,7 +125,7 @@ export default function LoginPage() {
             {/* Error message */}
             {error && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2">
-                <Zap className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <Zap className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
@@ -156,7 +162,6 @@ export default function LoginPage() {
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );

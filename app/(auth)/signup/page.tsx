@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { signUp } from "@/lib/supabase/auth";
 import { Eye, EyeOff, Zap } from "lucide-react";
 import mimirLogo from "@/public/mimir_logo_white.png";
 
 export default function SignupPage() {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,8 +18,8 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError("Email and password are required");
+    if (!displayName.trim() || !email.trim() || !password.trim()) {
+      setError("Display name, email, and password are required");
       return;
     }
 
@@ -26,10 +28,10 @@ export default function SignupPage() {
     setSuccess("");
 
     try {
-      await signUp(email, password);
+      await signUp(email, password, displayName.trim());
       setSuccess("Check your email to confirm your account!");
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,12 @@ export default function SignupPage() {
       {/* Main content */}
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <img src={mimirLogo.src} alt="Mimir Logo" className="w-16 h-auto mx-auto mb-4" />
+          <Image
+            src={mimirLogo}
+            alt="Mimir Logo"
+            className="w-16 h-auto mx-auto mb-4"
+            priority
+          />
           <h1 className="text-4xl font-bold text-white mb-2 font-lora">
             Mimir
           </h1>
@@ -64,6 +71,25 @@ export default function SignupPage() {
           </div>
 
           <div className="space-y-5">
+            <div className="space-y-2">
+              <label
+                htmlFor="displayName"
+                className="text-sm font-medium text-slate-300 block"
+              >
+                Display Name
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value.slice(0, 50))}
+                placeholder="What should people call you?"
+                required
+                disabled={loading || !!success}
+                className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all disabled:opacity-50"
+              />
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="email"

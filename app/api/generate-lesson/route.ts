@@ -25,6 +25,15 @@ export async function POST(req: Request) {
 
     const supabase = await createClient();
 
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Verify user owns this bootcamp
     const { data: bootcamp, error: bootcampError } = await supabase
       .from("bootcamps")
@@ -39,12 +48,25 @@ export async function POST(req: Request) {
       );
     }
 
+    if (bootcamp.user_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { data: ownerEnrollment } = await supabase
+      .from("bootcamp_enrollments")
+      .select("current_day")
+      .eq("bootcamp_id", bootcampId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const currentDay = ownerEnrollment?.current_day ?? bootcamp.current_day;
+
     // Enforce sequential unlocking
     // Users can regenerate past lessons (if needed) or generate the current day
     // But cannot generate future days
-    if (dayNumber > bootcamp.current_day) {
+    if (dayNumber > currentDay) {
       return NextResponse.json(
-        { error: `You must complete Day ${bootcamp.current_day} first` },
+        { error: `You must complete Day ${currentDay} first` },
         { status: 403 },
       );
     }
@@ -104,7 +126,7 @@ export async function POST(req: Request) {
         contentLength: lesson.content.length,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle validation errors
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -120,7 +142,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Failed to generate lesson",
-        details: error.message,
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     );
@@ -158,7 +180,7 @@ export async function GET(req: Request) {
       success: true,
       lesson,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Fetch lesson error:", error);
     return NextResponse.json(
       { error: "Failed to fetch lesson" },

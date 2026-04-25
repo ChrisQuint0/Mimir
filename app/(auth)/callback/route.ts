@@ -10,6 +10,5 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // Redirect to dashboard after confirmation
-  return NextResponse.redirect(new URL("/dashboard", request.url));
+  return NextResponse.redirect(new URL("/", request.url));
 }

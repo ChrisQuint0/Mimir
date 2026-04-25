@@ -15,6 +15,7 @@ interface AuthFormProps {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,16 +28,16 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (mode === "signup") {
-        await signUp(email, password);
+        await signUp(email, password, displayName);
         // Supabase sends confirmation email by default
         setError("Check your email to confirm your account!");
       } else {
         await signIn(email, password);
-        router.push("/dashboard");
+        router.push("/");
         router.refresh();
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -44,6 +45,21 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
+      {mode === "signup" && (
+        <div className="space-y-2">
+          <Label htmlFor="displayName">Display Name</Label>
+          <Input
+            id="displayName"
+            type="text"
+            placeholder="How people will know you"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+            disabled={loading}
+          />
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input

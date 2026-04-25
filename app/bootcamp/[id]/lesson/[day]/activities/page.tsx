@@ -1,13 +1,20 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, BookOpen, CheckCircle2, Lightbulb, Eye, EyeOff, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  BookOpen,
+  CheckCircle2,
+  Lightbulb,
+  Eye,
+  EyeOff,
+  Sparkles,
+} from "lucide-react";
 import { ActivityCard } from "@/components/bootcamp/ActivityCard";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
 
 interface Activity {
   id: string;
@@ -18,6 +25,8 @@ interface Activity {
 }
 
 interface Bootcamp {
+  user_id: string;
+  current_day: number;
   title: string;
 }
 
@@ -41,22 +50,51 @@ export default function ActivitiesPage() {
   const [error, setError] = useState<string | null>(null);
   const [revealAll, setRevealAll] = useState(false);
   const [completing, setCompleting] = useState(false);
+  const [currentDay, setCurrentDay] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+
       // Fetch bootcamp info
       const { data: bootcampData } = await supabase
         .from("bootcamps")
-        .select("title")
+        .select("title, user_id, current_day")
         .eq("id", id)
         .single();
 
       if (!bootcampData) {
-        notFound();
+        router.replace("/");
         return;
       }
+
+      const isOwner = bootcampData.user_id === user.id;
+      const { data: enrollment } = await supabase
+        .from("bootcamp_enrollments")
+        .select("current_day")
+        .eq("bootcamp_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const progressDay =
+        enrollment?.current_day ??
+        (isOwner ? (bootcampData.current_day ?? 1) : null);
+
+      if (!progressDay || dayNumber > progressDay) {
+        router.replace(`/bootcamp/${id}`);
+        return;
+      }
+
+      setCurrentDay(progressDay);
 
       setBootcamp(bootcampData);
 
@@ -104,9 +142,13 @@ export default function ActivitiesPage() {
           const result = await response.json();
           setActivities(result.activities || []);
           setGenerating(false);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Error generating activities:", err);
-          setError(err.message || "Failed to generate activities");
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to generate activities",
+          );
           setGenerating(false);
         }
       } else {
@@ -116,7 +158,7 @@ export default function ActivitiesPage() {
     }
 
     fetchData();
-  }, [id, dayNumber]);
+  }, [id, dayNumber, router]);
 
   // Scroll to top when activities are loaded or generated
   useEffect(() => {
@@ -141,7 +183,7 @@ export default function ActivitiesPage() {
         throw new Error(errorData.error || "Failed to complete day");
       }
 
-      const result = await response.json();
+      await response.json();
 
       // Show success toast
       toast.success(`Day ${dayNumber} completed!`, {
@@ -153,10 +195,10 @@ export default function ActivitiesPage() {
       setTimeout(() => {
         router.push(`/bootcamp/${id}`);
       }, 1000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error completing day:", err);
       toast.error("Failed to complete day", {
-        description: err.message || "Please try again.",
+        description: err instanceof Error ? err.message : "Please try again.",
       });
       setCompleting(false);
     }
@@ -178,7 +220,7 @@ export default function ActivitiesPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl animate-pulse"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-amber-500 to-orange-500 rounded-2xl animate-pulse"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <Sparkles className="w-10 h-10 text-white animate-bounce" />
             </div>
@@ -202,19 +244,27 @@ export default function ActivitiesPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-8 h-8 text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">
             Generation Failed
           </h2>
-          <p className="text-slate-400 mb-6">
-            {error}
-          </p>
+          <p className="text-slate-400 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25"
           >
             Try Again
           </button>
@@ -229,18 +279,14 @@ export default function ActivitiesPage() {
 
   // If no activities exist, show generation prompt
   if (!activities || activities.length === 0) {
-
     return (
       <div className="min-h-screen bg-slate-950">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-              <Link
-                href="/dashboard"
-                className="hover:text-slate-300 transition-colors"
-              >
-                Dashboard
+              <Link href="/" className="hover:text-slate-300 transition-colors">
+                Feed
               </Link>
               <ChevronRight className="w-4 h-4" />
               <Link
@@ -270,12 +316,12 @@ export default function ActivitiesPage() {
                   No Activities Yet
                 </h2>
                 <p className="text-slate-400 mb-6">
-                  Activities haven't been generated for this lesson yet.
+                  Activities haven&apos;t been generated for this lesson yet.
                   Generate them to start practicing!
                 </p>
                 <Link
                   href={`/bootcamp/${id}/lesson/${dayNumber}`}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium rounded-lg transition-all shadow-lg shadow-blue-500/25"
                 >
                   Back to Lesson
                 </Link>
@@ -293,11 +339,8 @@ export default function ActivitiesPage() {
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-            <Link
-              href="/dashboard"
-              className="hover:text-slate-300 transition-colors"
-            >
-              Dashboard
+            <Link href="/" className="hover:text-slate-300 transition-colors">
+              Feed
             </Link>
             <ChevronRight className="w-4 h-4" />
             <Link
@@ -325,20 +368,24 @@ export default function ActivitiesPage() {
             </div>
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-lora)' }}>
+                <h1
+                  className="text-4xl font-bold text-white mb-4"
+                  style={{ fontFamily: "var(--font-lora)" }}
+                >
                   {lesson.title}
                 </h1>
                 <p className="text-slate-400">
-                  Complete these {activities.length} activities to reinforce what
-                  you've learned.
+                  Complete these {activities.length} activities to reinforce
+                  what you&apos;ve learned.
                 </p>
               </div>
               <button
                 onClick={() => setRevealAll(!revealAll)}
-                className={`flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${revealAll
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-                  : "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
-                  }`}
+                className={`shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  revealAll
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                    : "bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20"
+                }`}
               >
                 {revealAll ? (
                   <>
@@ -370,37 +417,48 @@ export default function ActivitiesPage() {
 
           {/* Completion section */}
           <div className="border-t border-slate-800 pt-8">
-            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6">
+            <div className="bg-linear-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-6 h-6 text-green-400" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    Great Progress!
+                    {currentDay === dayNumber
+                      ? "Great Progress!"
+                      : "Day Completed"}
                   </h3>
                   <p className="text-slate-400 text-sm mb-4">
-                    You've completed the activities for Day {dayNumber}. When
-                    you're ready, mark this day as complete to unlock the next
-                    lesson.
+                    {currentDay === dayNumber
+                      ? `You've completed the activities for Day ${dayNumber}. When you're ready, mark this day as complete to unlock the next lesson.`
+                      : `You already completed Day ${dayNumber}. Head back to the syllabus to continue your journey.`}
                   </p>
-                  <button
-                    onClick={handleCompleteDay}
-                    disabled={completing}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-green-600/50 disabled:to-emerald-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
-                  >
-                    {completing ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Completing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>Mark Day {dayNumber} Complete</span>
-                      </>
-                    )}
-                  </button>
+                  {currentDay === dayNumber ? (
+                    <button
+                      onClick={handleCompleteDay}
+                      disabled={completing}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:from-green-600/50 disabled:to-emerald-600/50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
+                    >
+                      {completing ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Completing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Mark Day {dayNumber} Complete</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/bootcamp/${id}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg transition-all"
+                    >
+                      Back to Syllabus
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

@@ -8,6 +8,11 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/tokyo-night-dark.css";
 import { Sparkles } from "lucide-react";
+import type { ComponentPropsWithoutRef } from "react";
+
+type MarkdownCodeProps = ComponentPropsWithoutRef<"code"> & {
+  node?: unknown;
+};
 
 interface PageProps {
   params: Promise<{ id: string; day: string }>;
@@ -17,15 +22,35 @@ export default async function LessonPage({ params }: PageProps) {
   const { id, day } = await params;
   const dayNumber = parseInt(day);
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Fetch bootcamp info
   const { data: bootcamp } = await supabase
     .from("bootcamps")
-    .select("title, goal, duration_days, current_day")
+    .select("title, goal, duration_days, current_day, user_id")
     .eq("id", id)
     .single();
 
   if (!bootcamp) {
+    notFound();
+  }
+
+  const isOwner = user?.id === bootcamp.user_id;
+  const { data: enrollment } = user
+    ? await supabase
+        .from("bootcamp_enrollments")
+        .select("current_day")
+        .eq("bootcamp_id", id)
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const currentDay =
+    enrollment?.current_day ?? (isOwner ? (bootcamp.current_day ?? 1) : null);
+
+  if (!currentDay || dayNumber > currentDay) {
     notFound();
   }
 
@@ -60,11 +85,8 @@ export default async function LessonPage({ params }: PageProps) {
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-            <Link
-              href="/dashboard"
-              className="hover:text-slate-300 transition-colors"
-            >
-              Dashboard
+            <Link href="/" className="hover:text-slate-300 transition-colors">
+              Feed
             </Link>
             <ChevronRight className="w-4 h-4" />
             <Link
@@ -92,7 +114,10 @@ export default async function LessonPage({ params }: PageProps) {
                 <span>{readingTime} min read</span>
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight" style={{ fontFamily: 'var(--font-lora)' }}>
+            <h1
+              className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight"
+              style={{ fontFamily: "var(--font-lora)" }}
+            >
               {lesson.title}
             </h1>
           </div>
@@ -104,17 +129,26 @@ export default async function LessonPage({ params }: PageProps) {
               rehypePlugins={[rehypeHighlight, rehypeRaw]}
               components={{
                 h1: ({ children }) => (
-                  <h1 className="text-3xl font-bold text-white mt-8 mb-4 border-b border-slate-800 pb-3" style={{ fontFamily: 'var(--font-lora)' }}>
+                  <h1
+                    className="text-3xl font-bold text-white mt-8 mb-4 border-b border-slate-800 pb-3"
+                    style={{ fontFamily: "var(--font-lora)" }}
+                  >
                     {children}
                   </h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 className="text-2xl font-bold text-white mt-8 mb-4" style={{ fontFamily: 'var(--font-lora)' }}>
+                  <h2
+                    className="text-2xl font-bold text-white mt-8 mb-4"
+                    style={{ fontFamily: "var(--font-lora)" }}
+                  >
                     {children}
                   </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="text-xl font-semibold text-slate-200 mt-6 mb-3" style={{ fontFamily: 'var(--font-lora)' }}>
+                  <h3
+                    className="text-xl font-semibold text-slate-200 mt-6 mb-3"
+                    style={{ fontFamily: "var(--font-lora)" }}
+                  >
                     {children}
                   </h3>
                 ),
@@ -141,7 +175,11 @@ export default async function LessonPage({ params }: PageProps) {
                     {children}
                   </blockquote>
                 ),
-                code: ({ className, children, ...props }: any) => {
+                code: ({
+                  className,
+                  children,
+                  ...props
+                }: MarkdownCodeProps) => {
                   const match = /language-(\w+)/.exec(className || "");
                   const isInline = !match;
 

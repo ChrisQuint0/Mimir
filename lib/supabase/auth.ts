@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 
-export async function signUp(email: string, password: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  displayName?: string,
+) {
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -8,6 +12,7 @@ export async function signUp(email: string, password: string) {
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
+      data: displayName ? { display_name: displayName.trim() } : undefined,
     },
   });
 

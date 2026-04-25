@@ -22,38 +22,77 @@ export default function DashboardPage() {
 
   // Fetch bootcamps on mount
   useEffect(() => {
-    fetchBootcamps();
-  }, []);
+    async function fetchBootcamps() {
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-  async function fetchBootcamps() {
-    try {
-      const { data, error } = await supabase
-        .from("bootcamps")
-        .select("*");
-
-      if (error) throw error;
-
-      // Custom sort: highest progress first, then newest first
-      const sortedData = (data || []).sort((a, b) => {
-        const progressA = (a.current_day - 1) / a.duration_days;
-        const progressB = (b.current_day - 1) / b.duration_days;
-        
-        if (progressB !== progressA) {
-          return progressB - progressA;
+        if (authError || !user) {
+          setBootcamps([]);
+          return;
         }
-        
-        // If progress is the same, newest first
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
 
-      setBootcamps(sortedData);
-    } catch (error) {
-      console.error("Failed to fetch bootcamps:", error);
-      toast.error("Failed to load bootcamps");
-    } finally {
-      setLoading(false);
+        const { data, error } = await supabase
+          .from("bootcamps")
+          .select("*")
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        const bootcampIds = (data || []).map((bootcamp) => bootcamp.id);
+        let enrollmentMap = new Map<string, number>();
+
+        if (bootcampIds.length > 0) {
+          const { data: enrollments, error: enrollmentError } = await supabase
+            .from("bootcamp_enrollments")
+            .select("bootcamp_id, current_day")
+            .eq("user_id", user.id)
+            .in("bootcamp_id", bootcampIds);
+
+          if (enrollmentError) throw enrollmentError;
+
+          enrollmentMap = new Map(
+            (enrollments || []).map((enrollment) => [
+              enrollment.bootcamp_id,
+              enrollment.current_day,
+            ]),
+          );
+        }
+
+        const bootcampsWithProgress = (data || []).map((bootcamp) => ({
+          ...bootcamp,
+          current_day:
+            enrollmentMap.get(bootcamp.id) ?? bootcamp.current_day ?? 1,
+        }));
+
+        // Custom sort: highest progress first, then newest first
+        const sortedData = bootcampsWithProgress.sort((a, b) => {
+          const progressA = (a.current_day - 1) / a.duration_days;
+          const progressB = (b.current_day - 1) / b.duration_days;
+
+          if (progressB !== progressA) {
+            return progressB - progressA;
+          }
+
+          // If progress is the same, newest first
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+
+        setBootcamps(sortedData);
+      } catch (error) {
+        console.error("Failed to fetch bootcamps:", error);
+        toast.error("Failed to load bootcamps");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
+
+    void fetchBootcamps();
+  }, [supabase]);
 
   // Delete handler
   async function handleDelete(id: string) {
@@ -90,7 +129,7 @@ export default function DashboardPage() {
                 className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 space-y-4"
               >
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-slate-800 rounded-xl animate-pulse flex-shrink-0"></div>
+                  <div className="w-12 h-12 bg-slate-800 rounded-xl animate-pulse shrink-0"></div>
                   <div className="flex-1 space-y-2">
                     <div className="h-5 w-3/4 bg-slate-800 rounded animate-pulse"></div>
                     <div className="h-4 w-full bg-slate-800 rounded animate-pulse"></div>
@@ -129,7 +168,7 @@ export default function DashboardPage() {
               {/* Icon with glow */}
               <div className="relative mb-8 inline-block">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/20 flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-32 h-32 rounded-3xl bg-linear-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/20 flex items-center justify-center backdrop-blur-sm">
                     <BookOpen className="w-16 h-16 text-blue-400" />
                   </div>
                   <div
@@ -148,14 +187,22 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 -z-10 bg-blue-500/20 blur-3xl rounded-full animate-pulse"></div>
               </div>
 
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white" style={{ fontFamily: 'var(--font-lora)' }}>
+              <h1
+                className="text-5xl md:text-6xl font-bold mb-4 text-white"
+                style={{ fontFamily: "var(--font-lora)" }}
+              >
                 Your Journey Begins Here
               </h1>
 
               <p className="text-slate-400 text-lg mb-3 leading-relaxed max-w-xl mx-auto">
                 Welcome to{" "}
-                <span className="text-white font-semibold" style={{ fontFamily: 'var(--font-lora)' }}>Mimir</span>, your
-                personalized learning sanctuary.
+                <span
+                  className="text-white font-semibold"
+                  style={{ fontFamily: "var(--font-lora)" }}
+                >
+                  Mimir
+                </span>
+                , your personalized learning sanctuary.
               </p>
 
               <p className="text-slate-500 text-sm mb-10 max-w-md mx-auto">
@@ -188,7 +235,6 @@ export default function DashboardPage() {
                   <span>Track Your Progress</span>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
