@@ -107,7 +107,7 @@ export default function ActivitiesPage() {
         .single();
 
       if (!lessonData) {
-        notFound();
+        router.replace(`/bootcamp/${id}`);
         return;
       }
 

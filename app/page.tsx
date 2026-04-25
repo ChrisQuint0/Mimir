@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowRight, Compass, Rocket, Users } from "lucide-react";
+import { ArrowRight, Compass, Rocket, Trophy, Users } from "lucide-react";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { Header } from "@/components/layout/Header";
 import { LandingPage } from "@/components/landing/landing-page";
@@ -8,6 +8,25 @@ import { FeedBootcamp } from "@/lib/types/bootcamp";
 
 interface HomeProps {
   searchParams: Promise<{ q?: string }>;
+}
+
+function getDurationDays(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    return getDurationDays(value[0]);
+  }
+
+  if (
+    "duration_days" in value &&
+    typeof (value as { duration_days?: unknown }).duration_days === "number"
+  ) {
+    return (value as { duration_days: number }).duration_days;
+  }
+
+  return null;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
@@ -37,11 +56,23 @@ export default async function Home({ searchParams }: HomeProps) {
   );
   const bootcampIds = (bootcamps || []).map((bootcamp) => bootcamp.id);
 
-  const { data: profiles } = userIds.length
+  const { data: completionRows } = await supabase
+    .from("bootcamp_enrollments")
+    .select("user_id, current_day, bootcamps!inner(duration_days)");
+
+  const completionUserIds = Array.from(
+    new Set((completionRows || []).map((row) => row.user_id)),
+  );
+
+  const profileLookupIds = Array.from(
+    new Set([...userIds, ...completionUserIds]),
+  );
+
+  const { data: profiles } = profileLookupIds.length
     ? await supabase
         .from("profiles")
         .select("id, display_name, avatar_url")
-        .in("id", userIds)
+        .in("id", profileLookupIds)
     : { data: [] };
 
   const { data: followingRows } = userIds.length
@@ -68,6 +99,30 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const enrollmentCountMap = new Map<string, number>();
   const enrolledBootcampIds = new Set<string>();
+  const publishedCountByUser = new Map<string, number>();
+
+  for (const bootcamp of bootcamps || []) {
+    publishedCountByUser.set(
+      bootcamp.user_id,
+      (publishedCountByUser.get(bootcamp.user_id) ?? 0) + 1,
+    );
+  }
+
+  const completedCountByUser = new Map<string, number>();
+
+  for (const row of completionRows || []) {
+    const durationDays = getDurationDays(row.bootcamps);
+    if (!durationDays) {
+      continue;
+    }
+
+    if (row.current_day > durationDays) {
+      completedCountByUser.set(
+        row.user_id,
+        (completedCountByUser.get(row.user_id) ?? 0) + 1,
+      );
+    }
+  }
 
   for (const enrollment of enrollments || []) {
     enrollmentCountMap.set(
@@ -130,6 +185,42 @@ export default async function Home({ searchParams }: HomeProps) {
         return searchable.includes(normalizedQuery);
       })
     : feedBootcamps;
+
+  const topPublishedLeaders = Array.from(publishedCountByUser.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([leaderUserId, count]) => {
+      const profile = profileMap.get(leaderUserId);
+      return {
+        userId: leaderUserId,
+        count,
+        displayName:
+          profile?.display_name ||
+          (leaderUserId === user.id
+            ? user.user_metadata?.display_name ||
+              user.email?.split("@")[0] ||
+              "You"
+            : "Mimir Learner"),
+      };
+    });
+
+  const topCompletedLeaders = Array.from(completedCountByUser.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([leaderUserId, count]) => {
+      const profile = profileMap.get(leaderUserId);
+      return {
+        userId: leaderUserId,
+        count,
+        displayName:
+          profile?.display_name ||
+          (leaderUserId === user.id
+            ? user.user_metadata?.display_name ||
+              user.email?.split("@")[0] ||
+              "You"
+            : "Mimir Learner"),
+      };
+    });
 
   const publishedCount = filteredFeedBootcamps.length;
   const totalEnrollments = filteredFeedBootcamps.reduce(
@@ -283,6 +374,86 @@ export default async function Home({ searchParams }: HomeProps) {
 
             <aside className="lg:sticky lg:top-24">
               <div className="space-y-4">
+                <Link
+                  href="/leaderboards"
+                  className="group block rounded-3xl border border-slate-800 bg-slate-900/65 p-6 transition-colors hover:border-slate-700"
+                >
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                    <Trophy className="h-4 w-4 text-amber-300" />
+                    Leaderboards
+                    <ArrowRight className="ml-auto h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-1 group-hover:text-slate-300" />
+                  </div>
+
+                  <div className="mt-4 space-y-5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                        Most Published
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {topPublishedLeaders.length > 0 ? (
+                          topPublishedLeaders.map((leader, index) => (
+                            <div
+                              key={`published-${leader.userId}`}
+                              className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm"
+                            >
+                              <span className="inline-flex items-center gap-2 text-slate-200">
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[11px] text-slate-400">
+                                  {index + 1}
+                                </span>
+                                <span className="truncate max-w-35">
+                                  {leader.displayName}
+                                </span>
+                              </span>
+                              <span className="font-medium text-cyan-300">
+                                {leader.count}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-500">
+                            No published bootcamps yet.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                        Most Completed Courses
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {topCompletedLeaders.length > 0 ? (
+                          topCompletedLeaders.map((leader, index) => (
+                            <div
+                              key={`completed-${leader.userId}`}
+                              className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm"
+                            >
+                              <span className="inline-flex items-center gap-2 text-slate-200">
+                                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-800 text-[11px] text-slate-400">
+                                  {index + 1}
+                                </span>
+                                <span className="truncate max-w-35">
+                                  {leader.displayName}
+                                </span>
+                              </span>
+                              <span className="font-medium text-emerald-300">
+                                {leader.count}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-500">
+                            No completed courses yet.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-xs text-slate-500">
+                    Click to open full leaderboard view.
+                  </p>
+                </Link>
+
                 <div className="rounded-3xl border border-slate-800 bg-slate-900/65 p-6">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
                     <Compass className="h-4 w-4 text-blue-300" />
