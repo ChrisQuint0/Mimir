@@ -292,44 +292,47 @@ export function EditBootcampDialog({
           <div className="space-y-8">
             {activeTab === "bootcamp" && (
               <>
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
-                  Core Details
-                </h3>
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Core Details
+                  </h3>
 
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bootcamp-title" className="text-slate-300">
-                      Title
-                    </Label>
-                    <Input
-                      id="bootcamp-title"
-                      value={title}
-                      onChange={(event) =>
-                        setTitle(event.target.value.slice(0, 60))
-                      }
-                      disabled={saving}
-                      className="border-slate-700 bg-slate-900 text-white"
-                    />
-                  </div>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="bootcamp-title"
+                        className="text-slate-300"
+                      >
+                        Title
+                      </Label>
+                      <Input
+                        id="bootcamp-title"
+                        value={title}
+                        onChange={(event) =>
+                          setTitle(event.target.value.slice(0, 60))
+                        }
+                        disabled={saving}
+                        className="border-slate-700 bg-slate-900 text-white"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bootcamp-goal" className="text-slate-300">
-                      Goal
-                    </Label>
-                    <Textarea
-                      id="bootcamp-goal"
-                      value={goal}
-                      onChange={(event) =>
-                        setGoal(event.target.value.slice(0, 200))
-                      }
-                      disabled={saving}
-                      rows={4}
-                      className="border-slate-700 bg-slate-900 text-white"
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="bootcamp-goal" className="text-slate-300">
+                        Goal
+                      </Label>
+                      <Textarea
+                        id="bootcamp-goal"
+                        value={goal}
+                        onChange={(event) =>
+                          setGoal(event.target.value.slice(0, 200))
+                        }
+                        disabled={saving}
+                        rows={4}
+                        className="border-slate-700 bg-slate-900 text-white"
+                      />
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
                 <section className="space-y-4">
                   <div>
@@ -356,7 +359,11 @@ export function EditBootcampDialog({
                           <Input
                             value={day.title}
                             onChange={(event) =>
-                              handleDayChange(index, "title", event.target.value)
+                              handleDayChange(
+                                index,
+                                "title",
+                                event.target.value,
+                              )
                             }
                             disabled={saving}
                             className="border-slate-700 bg-slate-950 text-white"
@@ -383,7 +390,11 @@ export function EditBootcampDialog({
                           <Textarea
                             value={day.topics}
                             onChange={(event) =>
-                              handleDayChange(index, "topics", event.target.value)
+                              handleDayChange(
+                                index,
+                                "topics",
+                                event.target.value,
+                              )
                             }
                             disabled={saving}
                             rows={4}
@@ -399,77 +410,77 @@ export function EditBootcampDialog({
 
             {activeTab === "lesson" && (
               <section className="space-y-4">
-                  <div>
-                    <h3 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
-                      <FilePenLine className="h-4 w-4" />
-                      Lesson Content
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Edit generated lesson title and content. Days without
-                      generated lessons are skipped here.
-                    </p>
+                <div>
+                  <h3 className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    <FilePenLine className="h-4 w-4" />
+                    Lesson Content
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Edit generated lesson title and content. Days without
+                    generated lessons are skipped here.
+                  </p>
+                </div>
+
+                {loadingLessons && (
+                  <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading lesson content...
                   </div>
+                )}
 
-                  {loadingLessons && (
-                    <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading lesson content...
+                {!loadingLessons && lessons.length === 0 && (
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
+                    No generated lessons yet. Generate a day lesson from the
+                    syllabus to edit its full content here.
+                  </div>
+                )}
+
+                {lessons.map((lesson, index) => (
+                  <div
+                    key={lesson.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"
+                  >
+                    <div className="mb-4 text-sm font-medium text-emerald-300">
+                      Day {lesson.dayNumber} Lesson
                     </div>
-                  )}
 
-                  {!loadingLessons && lessons.length === 0 && (
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
-                      No generated lessons yet. Generate a day lesson from the
-                      syllabus to edit its full content here.
-                    </div>
-                  )}
-
-                  {lessons.map((lesson, index) => (
-                    <div
-                      key={lesson.id}
-                      className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"
-                    >
-                      <div className="mb-4 text-sm font-medium text-emerald-300">
-                        Day {lesson.dayNumber} Lesson
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">Lesson title</Label>
+                        <Input
+                          value={lesson.title}
+                          onChange={(event) =>
+                            handleLessonChange(
+                              index,
+                              "title",
+                              event.target.value,
+                            )
+                          }
+                          disabled={saving}
+                          className="border-slate-700 bg-slate-950 text-white"
+                        />
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-slate-300">Lesson title</Label>
-                          <Input
-                            value={lesson.title}
-                            onChange={(event) =>
-                              handleLessonChange(
-                                index,
-                                "title",
-                                event.target.value,
-                              )
-                            }
-                            disabled={saving}
-                            className="border-slate-700 bg-slate-950 text-white"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-slate-300">Lesson content</Label>
-                          <Textarea
-                            value={lesson.content}
-                            onChange={(event) =>
-                              handleLessonChange(
-                                index,
-                                "content",
-                                event.target.value,
-                              )
-                            }
-                            disabled={saving}
-                            rows={10}
-                            className="border-slate-700 bg-slate-950 text-sm text-white"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-300">Lesson content</Label>
+                        <Textarea
+                          value={lesson.content}
+                          onChange={(event) =>
+                            handleLessonChange(
+                              index,
+                              "content",
+                              event.target.value,
+                            )
+                          }
+                          disabled={saving}
+                          rows={10}
+                          className="border-slate-700 bg-slate-950 text-sm text-white"
+                        />
                       </div>
                     </div>
-                  ))}
-                </section>
+                  </div>
+                ))}
+              </section>
             )}
           </div>
         </div>

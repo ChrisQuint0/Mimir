@@ -72,7 +72,9 @@ export async function PUT(
         syllabus_json: syllabus,
       })
       .eq("id", id)
-      .select("id, title, goal, caption, published_at, duration_days, syllabus_json")
+      .select(
+        "id, title, goal, caption, published_at, duration_days, syllabus_json",
+      )
       .single();
 
     if (updateError || !updatedBootcamp) {

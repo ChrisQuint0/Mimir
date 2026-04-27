@@ -24,11 +24,18 @@ async function assertOwner(
     .single();
 
   if (bootcampError || !bootcamp) {
-    return { error: NextResponse.json({ error: "Bootcamp not found" }, { status: 404 }) };
+    return {
+      error: NextResponse.json(
+        { error: "Bootcamp not found" },
+        { status: 404 },
+      ),
+    };
   }
 
   if (bootcamp.user_id !== userId) {
-    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+    return {
+      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
   }
 
   return { error: null };
@@ -112,10 +119,11 @@ export async function PUT(
       return ownerError;
     }
 
-    const { data: existingLessons, error: existingLessonsError } = await supabase
-      .from("lessons")
-      .select("id, day_number")
-      .eq("bootcamp_id", id);
+    const { data: existingLessons, error: existingLessonsError } =
+      await supabase
+        .from("lessons")
+        .select("id, day_number")
+        .eq("bootcamp_id", id);
 
     if (existingLessonsError) {
       console.error("Lookup lessons error:", existingLessonsError);
