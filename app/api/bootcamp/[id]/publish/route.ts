@@ -81,3 +81,67 @@ export async function POST(
     );
   }
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: bootcamp, error: bootcampError } = await supabase
+      .from("bootcamps")
+      .select("id, user_id")
+      .eq("id", id)
+      .single();
+
+    if (bootcampError || !bootcamp) {
+      return NextResponse.json(
+        { error: "Bootcamp not found" },
+        { status: 404 },
+      );
+    }
+
+    if (bootcamp.user_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const { data: updatedBootcamp, error: updateError } = await supabase
+      .from("bootcamps")
+      .update({
+        published_at: null,
+      })
+      .eq("id", id)
+      .select("id, caption, published_at")
+      .single();
+
+    if (updateError || !updatedBootcamp) {
+      console.error("Unpublish bootcamp error:", updateError);
+      return NextResponse.json(
+        { error: "Failed to unpublish bootcamp" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      bootcamp: updatedBootcamp,
+    });
+  } catch (error) {
+    console.error("Unpublish route error:", error);
+    return NextResponse.json(
+      { error: "Failed to unpublish bootcamp" },
+      { status: 500 },
+    );
+  }
+}

@@ -10,6 +10,7 @@ import {
   UserCircle2,
   Star,
 } from "lucide-react";
+import { EditBootcampDialog } from "@/components/bootcamp/EditBootcampDialog";
 import { SyllabusView } from "@/components/bootcamp/SyllabusView";
 import { EnrollButton } from "@/components/bootcamp/EnrollButton";
 import { ReviewsSection } from "@/components/bootcamp/ReviewsSection";
@@ -204,6 +205,31 @@ export default async function BootcampDetailPage({ params }: PageProps) {
                 <EnrollButton
                   bootcampId={bootcamp.id}
                   initiallyEnrolled={false}
+                />
+              </div>
+            )}
+
+            {isOwner && (
+              <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.22em] text-slate-500">
+                    Owner controls
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold text-white">
+                    Edit your bootcamp anytime
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    Update the title, goal, and syllabus. If it is published,
+                    the latest version will appear everywhere automatically.
+                  </p>
+                </div>
+                <EditBootcampDialog
+                  bootcampId={bootcamp.id}
+                  initialTitle={bootcamp.title}
+                  initialGoal={bootcamp.goal}
+                  initialCaption={bootcamp.caption}
+                  initialDays={bootcamp.syllabus_json.days}
+                  isPublished={Boolean(bootcamp.published_at)}
                 />
               </div>
             )}

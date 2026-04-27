@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
@@ -10,6 +10,7 @@ import {
   BookOpen,
   Send,
   Globe2,
+  Trash2,
 } from "lucide-react";
 import { SyllabusDay } from "@/lib/types/bootcamp";
 import { toast } from "sonner";
@@ -44,6 +45,14 @@ export function SyllabusView({
   const [caption, setCaption] = useState(initialCaption ?? "");
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(isPublished);
+
+  useEffect(() => {
+    setCaption(initialCaption ?? "");
+  }, [initialCaption]);
+
+  useEffect(() => {
+    setPublished(isPublished);
+  }, [isPublished]);
 
   const captionCharsLeft = 280 - caption.length;
 
@@ -121,12 +130,43 @@ export function SyllabusView({
 
       setPublished(true);
       setCaption(data.bootcamp.caption);
-      toast.success("Bootcamp published", {
-        description: "Your bootcamp is now live in the community feed.",
+      toast.success(published ? "Post updated" : "Bootcamp published", {
+        description: published
+          ? "Your published post now shows the latest caption."
+          : "Your bootcamp is now live in the community feed.",
       });
       router.refresh();
     } catch (error: unknown) {
-      toast.error("Publish failed", {
+      toast.error(published ? "Update failed" : "Publish failed", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    setPublishing(true);
+
+    try {
+      const response = await fetch(`/api/bootcamp/${bootcampId}/publish`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove published post");
+      }
+
+      setPublished(false);
+      toast.success("Post removed", {
+        description: "Your bootcamp is no longer shown in the community feed.",
+      });
+      router.refresh();
+    } catch (error: unknown) {
+      toast.error("Could not remove post", {
         description:
           error instanceof Error ? error.message : "Please try again.",
       });
@@ -151,7 +191,8 @@ export function SyllabusView({
               <p className="mt-2 text-sm leading-6 text-slate-400">
                 Add a short caption about what this bootcamp helps people learn.
                 Once published, it appears in the main feed and others can
-                enroll.
+                enroll. You can edit the caption later or remove the published
+                post at any time.
               </p>
             </div>
 
@@ -164,7 +205,7 @@ export function SyllabusView({
             <textarea
               value={caption}
               onChange={(event) => setCaption(event.target.value.slice(0, 280))}
-              disabled={published || publishing}
+              disabled={publishing}
               rows={4}
               placeholder="Tell the community why this bootcamp is worth enrolling in..."
               className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
@@ -175,28 +216,49 @@ export function SyllabusView({
               >
                 {captionCharsLeft} characters left
               </p>
-              <button
-                onClick={handlePublish}
-                disabled={published || publishing || !caption.trim()}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6749fb] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5a3ee0] disabled:cursor-not-allowed disabled:bg-slate-700"
-              >
-                {publishing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Publishing...</span>
-                  </>
-                ) : published ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    <span>Published</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    <span>Publish</span>
-                  </>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {published && (
+                  <button
+                    onClick={handleUnpublish}
+                    disabled={publishing}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-400"
+                  >
+                    {publishing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Removing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Remove Post</span>
+                      </>
+                    )}
+                  </button>
                 )}
-              </button>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing || !caption.trim()}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6749fb] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#5a3ee0] disabled:cursor-not-allowed disabled:bg-slate-700"
+                >
+                  {publishing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{published ? "Saving..." : "Publishing..."}</span>
+                    </>
+                  ) : published ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Save Post</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      <span>Publish</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
