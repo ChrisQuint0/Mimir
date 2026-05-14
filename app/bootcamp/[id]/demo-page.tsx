@@ -71,16 +71,16 @@ export function DemoBootcampPage({ bootcampId }: DemoBootcampPageProps) {
     // Clear all demo-related localStorage
     localStorage.removeItem("demo-current-day");
     localStorage.removeItem("demo-existing-lessons");
-    
+
     // Clear all activity data
     for (let i = 1; i <= DEMO_BOOTCAMP.duration_days; i++) {
       localStorage.removeItem(`demo-activities-day-${i}`);
     }
-    
+
     // Reset state
     setCurrentDay(1);
     setExistingLessons([]);
-    
+
     toast.success("Demo reset!", {
       description: "Starting fresh from Day 1",
       icon: <RotateCcw className="w-5 h-5 text-blue-400" />,

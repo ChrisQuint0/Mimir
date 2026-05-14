@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, BookOpen, Clock, ArrowRight, Sparkles } from "lucide-react";
+import {
+  ChevronRight,
+  BookOpen,
+  Clock,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -28,7 +34,9 @@ export function DemoLessonPage({ bootcampId, dayNumber }: DemoLessonPageProps) {
 
   useEffect(() => {
     // Check if activities exist for this lesson
-    const savedActivities = localStorage.getItem(`demo-activities-day-${dayNumber}`);
+    const savedActivities = localStorage.getItem(
+      `demo-activities-day-${dayNumber}`,
+    );
     setHasActivities(!!savedActivities);
   }, [dayNumber]);
 

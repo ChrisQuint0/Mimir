@@ -41,7 +41,7 @@ export async function PUT(
 
     const { data: bootcamp, error: bootcampError } = await supabase
       .from("bootcamps")
-      .select("id, user_id, current_day")
+      .select("id, user_id, current_day, published_at")
       .eq("id", id)
       .single();
 
@@ -54,6 +54,14 @@ export async function PUT(
 
     if (bootcamp.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Prevent editing published bootcamps
+    if (bootcamp.published_at) {
+      return NextResponse.json(
+        { error: "Cannot edit published bootcamp" },
+        { status: 403 },
+      );
     }
 
     const clampedCurrentDay = Math.min(

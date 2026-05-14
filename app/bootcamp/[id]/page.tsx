@@ -24,12 +24,12 @@ interface PageProps {
 
 export default async function BootcampDetailPage({ params }: PageProps) {
   const { id } = await params;
-  
+
   // Check if this is a demo bootcamp
   if (id === DEMO_BOOTCAMP.id) {
     return <DemoBootcampPage bootcampId={id} />;
   }
-  
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -217,18 +217,18 @@ export default async function BootcampDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {isOwner && (
+            {isOwner && !bootcamp.published_at && (
               <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.22em] text-slate-500">
                     Owner controls
                   </p>
                   <h2 className="mt-2 text-xl font-semibold text-white">
-                    Edit your bootcamp anytime
+                    Edit your bootcamp
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    Update the title, goal, and syllabus. If it is published,
-                    the latest version will appear everywhere automatically.
+                    Update the title, goal, and syllabus before publishing. Once
+                    published, the bootcamp cannot be edited.
                   </p>
                 </div>
                 <EditBootcampDialog
@@ -311,7 +311,7 @@ export default async function BootcampDetailPage({ params }: PageProps) {
               bootcampId={bootcamp.id}
               bootcampGoal={bootcamp.goal}
               existingLessons={existingLessons}
-              canGenerateLessons={isOwner}
+              canGenerateLessons={isOwner && !bootcamp.published_at}
               canAccessLessons={isEnrolled}
               showPublishControls={isOwner}
               initialCaption={bootcamp.caption}

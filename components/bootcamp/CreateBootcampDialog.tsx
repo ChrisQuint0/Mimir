@@ -46,15 +46,15 @@ export function CreateBootcampDialog({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Detect Ctrl+Shift+Q
-      if (e.ctrlKey && e.shiftKey && e.key === 'Q') {
+      if (e.ctrlKey && e.shiftKey && e.key === "Q") {
         e.preventDefault();
-        setKeySequence(['Q']);
+        setKeySequence(["Q"]);
         toast.info("Press E to autofill demo data", { duration: 2000 });
         return;
       }
 
       // Detect E after Q
-      if (keySequence.length === 1 && keySequence[0] === 'Q' && e.key === 'e') {
+      if (keySequence.length === 1 && keySequence[0] === "Q" && e.key === "e") {
         e.preventDefault();
         // Autofill with demo data
         setTitle(DEMO_BOOTCAMP.title);
@@ -75,8 +75,8 @@ export function CreateBootcampDialog({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, keySequence]);
 
   // Reset demo mode when dialog closes
@@ -92,7 +92,7 @@ export function CreateBootcampDialog({
     localStorage.removeItem("demo-current-day");
     localStorage.removeItem("demo-existing-lessons");
     localStorage.removeItem("demo-bootcamp-active");
-    
+
     // Clear all activity data (30 days)
     for (let i = 1; i <= 30; i++) {
       localStorage.removeItem(`demo-activities-day-${i}`);
@@ -115,12 +115,12 @@ export function CreateBootcampDialog({
       // DEMO MODE: Skip API calls, use static data
       if (demoMode) {
         console.log("Demo mode: Generating fake syllabus...");
-        
+
         // Clear any existing demo data first
         clearDemoData();
-        
+
         // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         console.log("Demo mode: Syllabus generated");
 
@@ -138,8 +138,8 @@ export function CreateBootcampDialog({
         setDemoMode(false);
 
         // Store demo mode in localStorage
-        localStorage.setItem('demo-bootcamp-active', 'true');
-        
+        localStorage.setItem("demo-bootcamp-active", "true");
+
         router.push(`/bootcamp/${DEMO_BOOTCAMP.id}`);
         router.refresh();
         return;

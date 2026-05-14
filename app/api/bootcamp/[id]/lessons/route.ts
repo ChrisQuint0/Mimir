@@ -19,7 +19,7 @@ async function assertOwner(
 ) {
   const { data: bootcamp, error: bootcampError } = await supabase
     .from("bootcamps")
-    .select("id, user_id")
+    .select("id, user_id, published_at")
     .eq("id", bootcampId)
     .single();
 
@@ -29,16 +29,18 @@ async function assertOwner(
         { error: "Bootcamp not found" },
         { status: 404 },
       ),
+      bootcamp: null,
     };
   }
 
   if (bootcamp.user_id !== userId) {
     return {
       error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+      bootcamp: null,
     };
   }
 
-  return { error: null };
+  return { error: null, bootcamp };
 }
 
 export async function GET(
@@ -58,7 +60,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error: ownerError } = await assertOwner(supabase, id, user.id);
+    const { error: ownerError, bootcamp } = await assertOwner(
+      supabase,
+      id,
+      user.id,
+    );
     if (ownerError) {
       return ownerError;
     }
@@ -114,9 +120,21 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error: ownerError } = await assertOwner(supabase, id, user.id);
+    const { error: ownerError, bootcamp } = await assertOwner(
+      supabase,
+      id,
+      user.id,
+    );
     if (ownerError) {
       return ownerError;
+    }
+
+    // Prevent editing lessons for published bootcamps
+    if (bootcamp?.published_at) {
+      return NextResponse.json(
+        { error: "Cannot edit lessons for published bootcamp" },
+        { status: 403 },
+      );
     }
 
     const { data: existingLessons, error: existingLessonsError } =

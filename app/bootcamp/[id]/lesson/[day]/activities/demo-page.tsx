@@ -13,7 +13,11 @@ import {
 import { ActivityCard } from "@/components/bootcamp/ActivityCard";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getDemoActivities, DEMO_BOOTCAMP, DEMO_SYLLABUS } from "@/lib/demo-data";
+import {
+  getDemoActivities,
+  DEMO_BOOTCAMP,
+  DEMO_SYLLABUS,
+} from "@/lib/demo-data";
 import { useRouter } from "next/navigation";
 
 interface DemoActivitiesPageProps {
@@ -21,7 +25,10 @@ interface DemoActivitiesPageProps {
   dayNumber: number;
 }
 
-export function DemoActivitiesPage({ bootcampId, dayNumber }: DemoActivitiesPageProps) {
+export function DemoActivitiesPage({
+  bootcampId,
+  dayNumber,
+}: DemoActivitiesPageProps) {
   const router = useRouter();
   const [activities, setActivities] = useState<any[]>([]);
   const [generating, setGenerating] = useState(false);
@@ -32,7 +39,9 @@ export function DemoActivitiesPage({ bootcampId, dayNumber }: DemoActivitiesPage
 
   useEffect(() => {
     // Check if activities already exist
-    const savedActivities = localStorage.getItem(`demo-activities-day-${dayNumber}`);
+    const savedActivities = localStorage.getItem(
+      `demo-activities-day-${dayNumber}`,
+    );
     if (savedActivities) {
       setActivities(JSON.parse(savedActivities));
     } else {
@@ -43,7 +52,7 @@ export function DemoActivitiesPage({ bootcampId, dayNumber }: DemoActivitiesPage
         setActivities(demoActivities);
         localStorage.setItem(
           `demo-activities-day-${dayNumber}`,
-          JSON.stringify(demoActivities)
+          JSON.stringify(demoActivities),
         );
         setGenerating(false);
       }, 1500);
@@ -85,7 +94,8 @@ export function DemoActivitiesPage({ bootcampId, dayNumber }: DemoActivitiesPage
             Generating Activities...
           </h2>
           <p className="text-slate-400 mb-2">
-            Mimir is crafting personalized practice exercises for you. (Demo Mode)
+            Mimir is crafting personalized practice exercises for you. (Demo
+            Mode)
           </p>
           <p className="text-slate-500 text-sm">
             This usually takes 10-20 seconds.

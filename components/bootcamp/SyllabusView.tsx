@@ -413,6 +413,15 @@ export function SyllabusView({
                         </button>
                       )
                     )}
+                    {isCurrent &&
+                      !hasLesson &&
+                      !canGenerateLessons &&
+                      showPublishControls && (
+                        <p className="text-xs text-slate-500 italic py-2">
+                          Generate all lessons before publishing. Published
+                          bootcamps cannot be edited.
+                        </p>
+                      )}
                   </div>
                 )}
 

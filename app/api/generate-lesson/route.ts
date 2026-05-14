@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     // Verify user owns this bootcamp
     const { data: bootcamp, error: bootcampError } = await supabase
       .from("bootcamps")
-      .select("id, user_id, current_day")
+      .select("id, user_id, current_day, published_at")
       .eq("id", bootcampId)
       .single();
 
@@ -50,6 +50,14 @@ export async function POST(req: Request) {
 
     if (bootcamp.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Prevent generating lessons for published bootcamps
+    if (bootcamp.published_at) {
+      return NextResponse.json(
+        { error: "Cannot generate lessons for published bootcamp" },
+        { status: 403 },
+      );
     }
 
     const { data: ownerEnrollment } = await supabase

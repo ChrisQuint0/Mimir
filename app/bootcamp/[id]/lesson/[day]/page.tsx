@@ -26,12 +26,12 @@ interface PageProps {
 export default async function LessonPage({ params }: PageProps) {
   const { id, day } = await params;
   const dayNumber = parseInt(day);
-  
+
   // Check if this is a demo bootcamp
   if (id === DEMO_BOOTCAMP.id) {
     return <DemoLessonPage bootcampId={id} dayNumber={dayNumber} />;
   }
-  
+
   const supabase = await createClient();
   const {
     data: { user },
