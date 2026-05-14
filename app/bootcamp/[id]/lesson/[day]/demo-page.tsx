@@ -1,92 +1,41 @@
-import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+"use client";
+
 import Link from "next/link";
-import { ChevronRight, BookOpen, Clock, ArrowRight } from "lucide-react";
+import { ChevronRight, BookOpen, Clock, ArrowRight, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/tokyo-night-dark.css";
-import { Sparkles } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
-import { LecturePraisePanel } from "@/components/bootcamp/LecturePraisePanel";
-import { LessonDiscussionThread } from "@/components/bootcamp/LessonDiscussionThread";
+import { getDemoLesson, DEMO_BOOTCAMP, DEMO_SYLLABUS } from "@/lib/demo-data";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { LearningMaterialsDialog } from "@/components/bootcamp/LearningMaterialsDialog";
-import { DemoLessonPage } from "./demo-page";
-import { DEMO_BOOTCAMP } from "@/lib/demo-data";
 
 type MarkdownCodeProps = ComponentPropsWithoutRef<"code"> & {
   node?: unknown;
 };
 
-interface PageProps {
-  params: Promise<{ id: string; day: string }>;
+interface DemoLessonPageProps {
+  bootcampId: string;
+  dayNumber: number;
 }
 
-export default async function LessonPage({ params }: PageProps) {
-  const { id, day } = await params;
-  const dayNumber = parseInt(day);
-  
-  // Check if this is a demo bootcamp
-  if (id === DEMO_BOOTCAMP.id) {
-    return <DemoLessonPage bootcampId={id} dayNumber={dayNumber} />;
-  }
-  
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export function DemoLessonPage({ bootcampId, dayNumber }: DemoLessonPageProps) {
+  const router = useRouter();
+  const [hasActivities, setHasActivities] = useState(false);
 
-  // Fetch bootcamp info
-  const { data: bootcamp } = await supabase
-    .from("bootcamps")
-    .select("title, goal, duration_days, current_day, user_id")
-    .eq("id", id)
-    .single();
+  useEffect(() => {
+    // Check if activities exist for this lesson
+    const savedActivities = localStorage.getItem(`demo-activities-day-${dayNumber}`);
+    setHasActivities(!!savedActivities);
+  }, [dayNumber]);
 
-  if (!bootcamp) {
-    notFound();
-  }
+  const lesson = getDemoLesson(dayNumber);
+  const syllabusDay = DEMO_SYLLABUS.days.find((d) => d.day === dayNumber);
 
-  const isOwner = user?.id === bootcamp.user_id;
-  const { data: enrollment } = user
-    ? await supabase
-        .from("bootcamp_enrollments")
-        .select("current_day")
-        .eq("bootcamp_id", id)
-        .eq("user_id", user.id)
-        .maybeSingle()
-    : { data: null };
-
-  const currentDay =
-    enrollment?.current_day ?? (isOwner ? (bootcamp.current_day ?? 1) : null);
-
-  if (!currentDay || dayNumber > currentDay) {
-    notFound();
-  }
-
-  // Fetch lesson
-  const { data: lesson, error } = await supabase
-    .from("lessons")
-    .select("*")
-    .eq("bootcamp_id", id)
-    .eq("day_number", dayNumber)
-    .single();
-
-  if (error || !lesson) {
-    notFound();
-  }
-
-  // Check if activities exist for this lesson
-  const { data: existingActivities } = await supabase
-    .from("activities")
-    .select("id")
-    .eq("lesson_id", lesson.id)
-    .limit(1);
-
-  const hasActivities = existingActivities && existingActivities.length > 0;
-
-  // Estimate reading time (assuming 200 words per minute)
+  // Estimate reading time
   const wordCount = lesson.content.split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200);
 
@@ -101,13 +50,13 @@ export default async function LessonPage({ params }: PageProps) {
             </Link>
             <ChevronRight className="w-4 h-4" />
             <Link
-              href={`/bootcamp/${id}`}
+              href={`/bootcamp/${bootcampId}`}
               className="hover:text-slate-300 transition-colors"
             >
-              {bootcamp.title}
+              {DEMO_BOOTCAMP.title}
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-slate-400">Day {dayNumber}</span>
+            <span className="text-slate-400">Day {dayNumber} (Demo)</span>
           </nav>
 
           {/* Header */}
@@ -116,7 +65,7 @@ export default async function LessonPage({ params }: PageProps) {
               <div className="flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4" />
                 <span>
-                  Day {dayNumber} of {bootcamp.duration_days}
+                  Day {dayNumber} of {DEMO_BOOTCAMP.duration_days}
                 </span>
               </div>
               <div>•</div>
@@ -124,20 +73,23 @@ export default async function LessonPage({ params }: PageProps) {
                 <Clock className="w-4 h-4" />
                 <span>{readingTime} min read</span>
               </div>
+              <div>•</div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-300 text-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                Demo Mode
+              </span>
             </div>
             <h1
               className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight"
               style={{ fontFamily: "var(--font-lora)" }}
             >
-              {lesson.title}
+              {syllabusDay?.title || lesson.title}
             </h1>
           </div>
 
-          <LecturePraisePanel lessonId={lesson.id} lessonTitle={lesson.title} />
-
           <LearningMaterialsDialog
             lessonId={lesson.id}
-            lessonTitle={lesson.title}
+            lessonTitle={syllabusDay?.title || lesson.title}
           />
 
           {/* Lesson Content */}
@@ -258,16 +210,11 @@ export default async function LessonPage({ params }: PageProps) {
             </ReactMarkdown>
           </article>
 
-          <LessonDiscussionThread
-            lessonId={lesson.id}
-            lessonTitle={lesson.title}
-          />
-
           {/* Navigation footer */}
           <div className="border-t border-slate-800 pt-8">
             <div className="flex items-center justify-between">
               <Link
-                href={`/bootcamp/${id}`}
+                href={`/bootcamp/${bootcampId}`}
                 className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
               >
                 <ChevronRight className="w-4 h-4 rotate-180" />
@@ -276,7 +223,7 @@ export default async function LessonPage({ params }: PageProps) {
 
               {hasActivities ? (
                 <Link
-                  href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
+                  href={`/bootcamp/${bootcampId}/lesson/${dayNumber}/activities`}
                   className="group inline-flex items-center gap-2 px-6 py-3 bg-[#6749fb] hover:bg-[#6749fb]/90 text-white font-medium rounded-lg transition-all shadow-lg shadow-[#6749fb]/25"
                 >
                   <span>View Activities</span>
@@ -284,7 +231,7 @@ export default async function LessonPage({ params }: PageProps) {
                 </Link>
               ) : (
                 <Link
-                  href={`/bootcamp/${id}/lesson/${dayNumber}/activities`}
+                  href={`/bootcamp/${bootcampId}/lesson/${dayNumber}/activities`}
                   className="group inline-flex items-center gap-2 px-6 py-3 bg-[#f44c00] hover:bg-[#e64600] text-white font-medium rounded-lg transition-all shadow-lg shadow-[#f44c00]/25 hover:shadow-[#f44c00]/40"
                 >
                   <Sparkles className="w-4 h-4" />

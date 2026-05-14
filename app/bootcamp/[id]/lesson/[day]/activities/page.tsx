@@ -15,6 +15,8 @@ import {
 import { ActivityCard } from "@/components/bootcamp/ActivityCard";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { DemoActivitiesPage } from "./demo-page";
+import { DEMO_BOOTCAMP } from "@/lib/demo-data";
 
 interface Activity {
   id: string;
@@ -41,6 +43,11 @@ export default function ActivitiesPage() {
   const id = params?.id as string;
   const day = params?.day as string;
   const dayNumber = parseInt(day);
+
+  // Check if this is a demo bootcamp
+  if (id === DEMO_BOOTCAMP.id) {
+    return <DemoActivitiesPage bootcampId={id} dayNumber={dayNumber} />;
+  }
 
   const [bootcamp, setBootcamp] = useState<Bootcamp | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);

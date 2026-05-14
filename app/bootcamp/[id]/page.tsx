@@ -15,6 +15,8 @@ import { SyllabusView } from "@/components/bootcamp/SyllabusView";
 import { EnrollButton } from "@/components/bootcamp/EnrollButton";
 import { ReviewsSection } from "@/components/bootcamp/ReviewsSection";
 import type { ReviewWithAuthor } from "@/lib/types/bootcamp";
+import { DemoBootcampPage } from "./demo-page";
+import { DEMO_BOOTCAMP } from "@/lib/demo-data";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -22,6 +24,12 @@ interface PageProps {
 
 export default async function BootcampDetailPage({ params }: PageProps) {
   const { id } = await params;
+  
+  // Check if this is a demo bootcamp
+  if (id === DEMO_BOOTCAMP.id) {
+    return <DemoBootcampPage bootcampId={id} />;
+  }
+  
   const supabase = await createClient();
   const {
     data: { user },

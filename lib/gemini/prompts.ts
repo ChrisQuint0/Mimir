@@ -1,5 +1,5 @@
 export function generateSyllabusPrompt(goal: string, duration: number): string {
-  return `You are Mimir, an expert curriculum designer. create a structured ${duration}-day learning syllabus for the following goal:
+  return `You are Mimir, an expert curriculum designer. Create a structured ${duration}-day bootcamp plan for the following goal:
 
 GOAL: "${goal}"
 
@@ -9,8 +9,22 @@ Format the response as a JSON object with a "days" array. Each day should have:
 - description: string (brief overview of what will be learned)
 - topics: string[] (3-5 specific key topics/concepts)
 
-The syllabus should be progressive, starting with foundations and building up to complex topics.
-Ensure the content is achievable in about 1-2 hours per existing day.
+IMPORTANT CURRICULUM RULES:
+- Use a modular curriculum, not a "new lesson every single day" curriculum.
+- It is acceptable and preferred to have fewer core modules than total days (for example, around 12-18 modules in a 30-day plan).
+- Spread each module across multiple days when useful (for example: learn day, practice day, review/project day).
+- Include deliberate reinforcement days: practice, project, review, consolidation, or catch-up.
+- Avoid completion anxiety: do not imply learners fail if they do not finish exactly on calendar day boundaries.
+- Keep progression coherent: foundations -> intermediate application -> advanced integration.
+- Ensure each day is achievable in about 1-2 hours.
+
+HOW TO MAP DAYS:
+- Every day from 1 to ${duration} must be present in the "days" array.
+- Day titles can repeat module names with clear phase labels, such as:
+  - "Module 3: State Management (Learn)"
+  - "Module 3: State Management (Practice)"
+  - "Module 3: State Management (Project)"
+- Reuse and deepen topics across related days instead of introducing unrelated new concepts daily.
 
 EXAMPLE JSON FORMAT:
 {
@@ -33,11 +47,11 @@ export function generateLessonPrompt(
   dayTitle: string,
   topics: string[],
 ): string {
-  return `You are Mimir, an expert educator creating engaging learning content. Generate a comprehensive lesson for Day ${dayNumber} of a bootcamp.
+  return `You are Mimir, an expert educator creating engaging learning content. Generate comprehensive content for Step ${dayNumber} of a bootcamp.
 
 BOOTCAMP GOAL: "${goal}"
 
-DAY ${dayNumber}: ${dayTitle}
+STEP ${dayNumber}: ${dayTitle}
 
 TOPICS TO COVER:
 ${topics.map((topic, i) => `${i + 1}. ${topic}`).join("\n")}
@@ -45,9 +59,9 @@ ${topics.map((topic, i) => `${i + 1}. ${topic}`).join("\n")}
 Create a detailed, engaging lesson in Markdown format that:
 
 1. **Introduction (2-3 paragraphs)**
-   - Start with a brief overview of what will be learned today
+  - Start with a brief overview of what will be covered in this step
    - Explain why these topics are important
-   - Connect to previous days if applicable
+  - Connect to previous steps if applicable
 
 2. **Main Content (for each topic)**
    - Clear explanations with real-world examples
@@ -66,8 +80,13 @@ Create a detailed, engaging lesson in Markdown format that:
    - Highlight what learners should remember
 
 5. **Next Steps Preview**
-   - Brief mention of how this connects to future lessons
+  - Brief mention of how this connects to upcoming steps
    - Encourage practice and experimentation
+
+PACING GUIDANCE:
+- This bootcamp is modular and self-paced, so this step may be a learn/practice/review/project step.
+- If the title suggests practice, review, or project focus, prioritize applied exercises and reflection over introducing many new concepts.
+- Reinforce previously introduced topics when appropriate.
 
 FORMATTING REQUIREMENTS:
 - Use proper Markdown syntax

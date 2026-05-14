@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Loader2, Sparkles, Zap, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { DEMO_BOOTCAMP, DEMO_SYLLABUS } from "@/lib/demo-data";
 
 interface CreateBootcampDialogProps {
   open: boolean;
@@ -33,9 +34,70 @@ export function CreateBootcampDialog({
   const [goal, setGoal] = useState("");
   const [duration, setDuration] = useState([14]); // Default 14 days
   const [loading, setLoading] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [keySequence, setKeySequence] = useState<string[]>([]);
 
   const titleCharsLeft = 60 - title.length;
   const goalCharsLeft = 200 - goal.length;
+
+  // Keyboard shortcut: Ctrl+Shift+Q then E to autofill demo data
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Detect Ctrl+Shift+Q
+      if (e.ctrlKey && e.shiftKey && e.key === 'Q') {
+        e.preventDefault();
+        setKeySequence(['Q']);
+        toast.info("Press E to autofill demo data", { duration: 2000 });
+        return;
+      }
+
+      // Detect E after Q
+      if (keySequence.length === 1 && keySequence[0] === 'Q' && e.key === 'e') {
+        e.preventDefault();
+        // Autofill with demo data
+        setTitle(DEMO_BOOTCAMP.title);
+        setGoal(DEMO_BOOTCAMP.goal);
+        setDuration([DEMO_BOOTCAMP.duration_days]);
+        setDemoMode(true);
+        setKeySequence([]);
+        toast.success("Demo data loaded!", {
+          description: "Ready to generate a demo bootcamp",
+          icon: <Sparkles className="w-5 h-5 text-amber-400" />,
+        });
+        return;
+      }
+
+      // Reset sequence on any other key
+      if (keySequence.length > 0) {
+        setKeySequence([]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, keySequence]);
+
+  // Reset demo mode when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setDemoMode(false);
+      setKeySequence([]);
+    }
+  }, [open]);
+
+  // Clear demo localStorage when creating new demo
+  const clearDemoData = () => {
+    localStorage.removeItem("demo-current-day");
+    localStorage.removeItem("demo-existing-lessons");
+    localStorage.removeItem("demo-bootcamp-active");
+    
+    // Clear all activity data (30 days)
+    for (let i = 1; i <= 30; i++) {
+      localStorage.removeItem(`demo-activities-day-${i}`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +112,40 @@ export function CreateBootcampDialog({
     setLoading(true);
 
     try {
+      // DEMO MODE: Skip API calls, use static data
+      if (demoMode) {
+        console.log("Demo mode: Generating fake syllabus...");
+        
+        // Clear any existing demo data first
+        clearDemoData();
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        console.log("Demo mode: Syllabus generated");
+
+        // Show success message
+        toast.success("Bootcamp Created!", {
+          description: `Your ${duration[0]}-day learning journey has begun! (Demo Mode)`,
+          icon: <Rocket className="w-5 h-5 text-blue-400" />,
+        });
+
+        // Close dialog and redirect to demo bootcamp
+        onOpenChange(false);
+        setTitle("");
+        setGoal("");
+        setDuration([14]);
+        setDemoMode(false);
+
+        // Store demo mode in localStorage
+        localStorage.setItem('demo-bootcamp-active', 'true');
+        
+        router.push(`/bootcamp/${DEMO_BOOTCAMP.id}`);
+        router.refresh();
+        return;
+      }
+
+      // NORMAL MODE: Real API calls
       // Step 1: Generate syllabus from AI
       console.log("Generating syllabus...");
       const syllabusResponse = await fetch("/api/generate-syllabus", {
